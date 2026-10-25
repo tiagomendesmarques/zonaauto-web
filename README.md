@@ -31,7 +31,7 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 | `/` | Destaque, pesquisa rápida, stock, como funciona, serviços, importação, perguntas frequentes |
 | `/stock/` | Todas as viaturas, com filtros (marca, modelo, combustível, caixa, segmento, preço, ano, km) e ordenação |
 | `/stock/<marca-modelo-ano-ref>/` | Galeria, preço, características agrupadas, equipamento, descrição, WhatsApp e telefone |
-| `/importacao/`, `/contactos/` | Formulários (enviados por email via SMTP, ou por WhatsApp se o email não estiver configurado) |
+| `/importacao/`, `/contactos/` | Formulários que abrem o WhatsApp do stand com o pedido já escrito |
 | `/politica-de-privacidade/`, `/termos-e-condicoes-de-utilizacao/` | Textos legais do site anterior |
 | `/foto/<id>/<tamanho>.jpg` | Fotos do Standvirtual servidas pelo próprio site, com cache |
 | `/sitemap.xml`, `/robots.txt` | SEO (cada viatura tem também dados estruturados schema.org) |
@@ -49,18 +49,38 @@ npm run sync     # testa a leitura do Standvirtual e grava data/inventory.json
 npm start        # http://localhost:8080
 ```
 
-## Publicar no Google Cloud
+## Publicar no Google Cloud (uma só vez)
 
-1. Instalar o [gcloud](https://cloud.google.com/sdk/docs/install) e fazer `gcloud auth login`.
-2. `cp env.example.yaml env.yaml` e preencher telefone, WhatsApp, email, morada, horário.
-3. `PROJECT_ID=o-seu-projeto ./deploy.sh`
-4. Associar o domínio: Cloud Run → *Manage custom domains* → `zonaauto.pt`, e atualizar
-   o DNS conforme indicado.
+O mais simples é usar o **Cloud Shell** (https://shell.cloud.google.com), que já tem o `gcloud`:
+
+```bash
+gh auth login                      # para clonar o repositório privado e criar as variáveis do GitHub
+gh repo clone tiagomendesmarques/zonaauto-web && cd zonaauto-web
+PROJECT_ID=o-meu-projeto ./deploy.sh
+```
+
+O `deploy.sh` cria tudo: Cloud Run, bucket do inventário, a sincronização a cada 30 minutos e a
+ligação do GitHub ao projeto (Workload Identity, sem chaves guardadas no GitHub). Pode ser
+corrido de novo sem problema. No fim mostra o endereço do site.
+
+Para usar o domínio: Cloud Run → `zonaauto` → *Domínios personalizados* → `zonaauto.pt`, e
+copiar os registos DNS indicados para o fornecedor do domínio.
+
+## Atualizações
+
+| O quê | Como acontece |
+|---|---|
+| Carros (novos, vendidos, preços, fotos) | Automático. O Cloud Scheduler sincroniza com o Standvirtual a cada 30 minutos. |
+| Código, textos ou design | Automático. Cada `git push` para `main` publica uma nova versão (GitHub Actions → Cloud Run). |
+| Telefone, horário, morada | Editar `env.yaml` e correr `./deploy.sh`, ou mudar as variáveis no Cloud Run. |
+
+Se uma publicação falhar, o Cloud Run continua a servir a versão anterior. Para voltar atrás:
+Cloud Run → `zonaauto` → *Revisões* → enviar o tráfego para a revisão anterior.
 
 ## Personalizar
 
 - Cores e fontes: variáveis no topo de `public/css/style.css`.
 - Imagens e logótipo: `public/img/`.
-- Dados do stand e email: `env.yaml` (ver `env.example.yaml`).
+- Dados do stand: `env.yaml` (ver `env.example.yaml`).
 - Textos: `views/*.ejs`.
 - Leitura do Standvirtual: `src/scraper.js`.

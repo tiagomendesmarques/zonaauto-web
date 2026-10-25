@@ -23,15 +23,6 @@ module.exports = {
   // Token para o endpoint /tarefas/sincronizar (Cloud Scheduler)
   syncToken: env.SYNC_TOKEN || '',
 
-  // Envio dos formulários por email (SMTP). Sem isto, os pedidos seguem por WhatsApp.
-  mail: {
-    host: env.SMTP_HOST || '',
-    port: Number(env.SMTP_PORT || 465),
-    user: env.SMTP_USER || '',
-    pass: env.SMTP_PASS || '',
-    to: env.MAIL_TO || env.STAND_EMAIL || 'geral@zonaauto.pt',
-  },
-
   stand: {
     name: env.STAND_NAME || 'Zona Auto',
     tagline: env.STAND_TAGLINE || 'A tua referência no mundo automóvel. Ligamos pessoas a carros com transparência, rapidez e confiança.',

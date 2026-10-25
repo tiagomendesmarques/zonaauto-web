@@ -10,20 +10,16 @@
 <section class="section" style="padding-top:48px">
   <div class="wrap">
     <div class="form-layout">
-      <form class="form-card" method="post" action="/contactos/">
-        <div><h2>Envia-nos uma mensagem</h2><p class="lead" style="font-size:16px;margin-top:8px">Ou fala diretamente pelo WhatsApp, é o mais rápido.</p></div>
+      <form class="form-card" method="post" action="/contactos/" target="_blank">
+        <div><h2>Envia-nos uma mensagem</h2><p class="lead" style="font-size:16px;margin-top:8px">A mensagem abre no WhatsApp, já escrita, e respondemos no próprio dia.</p></div>
         <%- include('partials/form-alert') %>
         <div class="form-grid">
           <div class="input"><label for="c-nome">Nome *</label><input id="c-nome" name="nome" required autocomplete="name" value="<%= form.nome || '' %>"></div>
           <div class="input"><label for="c-tel">Telemóvel</label><input id="c-tel" name="telemovel" type="tel" autocomplete="tel" value="<%= form.telemovel || '' %>"></div>
           <div class="input full"><label for="c-email">Email</label><input id="c-email" name="email" type="email" autocomplete="email" value="<%= form.email || '' %>"></div>
           <div class="input full"><label for="c-msg">Mensagem *</label><textarea id="c-msg" name="mensagem" required placeholder="Em que podemos ajudar?"><%= form.mensagem || '' %></textarea></div>
-          <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
         </div>
-        <div class="band-actions" style="margin:0">
-          <button class="btn btn-primary" type="submit">Enviar mensagem<svg><use href="#i-arrow"/></svg></button>
-          <a class="btn btn-wa" href="<%= waLink('Olá! Gostaria de mais informações.') %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>WhatsApp</a>
-        </div>
+        <button class="btn btn-wa" type="submit" style="justify-self:start"><svg><use href="#i-wa"/></svg>Enviar por WhatsApp</button>
         <p class="form-note">Ao enviar aceitas a nossa <a href="/politica-de-privacidade/">política de privacidade</a>.</p>
       </form>
       <%- include('partials/contact-card') %>

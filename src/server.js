@@ -3,7 +3,6 @@ const express = require('express');
 const compression = require('compression');
 const config = require('./config');
 const store = require('./store');
-const mailer = require('./mailer');
 const photos = require('./photos');
 
 const app = express();
@@ -171,38 +170,33 @@ app.get(['/listings/:slug', '/viaturas/:slug'], wrap(async (req, res) => {
 }));
 app.get(['/contact-us', '/contact'], (req, res) => res.redirect(301, '/contactos/'));
 
-app.get('/importacao', (req, res) => res.render('importacao', { page: 'importacao', sent: null, form: {} }));
-app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos', sent: null, form: {} }));
+app.get('/importacao', (req, res) => res.render('importacao', { page: 'importacao', missing: false, form: {} }));
+app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos', missing: false, form: {} }));
 app.get('/politica-de-privacidade', (req, res) => res.render('privacidade', { page: '' }));
 app.get('/termos-e-condicoes-de-utilizacao', (req, res) => res.render('termos', { page: '' }));
 
-// Formulários
+// Formulários: o pedido segue pelo WhatsApp do stand, com a mensagem já escrita.
 const FORMS = {
   contactos: {
-    subject: (f) => `Contacto do site: ${f.nome}`,
-    fields: [['nome', 'Nome'], ['email', 'Email'], ['telemovel', 'Telemóvel'], ['viatura', 'Viatura'], ['mensagem', 'Mensagem']],
+    title: 'Contacto pelo site',
+    fields: [['nome', 'Nome'], ['telemovel', 'Telemóvel'], ['email', 'Email'], ['mensagem', 'Mensagem']],
     required: ['nome', 'mensagem'],
   },
   importacao: {
-    subject: (f) => `Pedido de importação: ${f.nome}`,
+    title: 'Pedido de importação',
     fields: [['nome', 'Nome'], ['telemovel', 'Telemóvel'], ['email', 'Email'], ['anuncio', 'Anúncio em vista'], ['prazo', 'Quando quer avançar'], ['detalhes', 'Detalhes']],
     required: ['nome', 'telemovel'],
   },
 };
 
 for (const [name, def] of Object.entries(FORMS)) {
-  app.post(`/${name}`, wrap(async (req, res) => {
+  app.post(`/${name}`, (req, res) => {
     const form = {};
-    for (const [k] of def.fields) form[k] = String(req.body[k] || '').trim().slice(0, 3000);
-    // Campo escondido "website": só os robôs o preenchem
-    if (req.body.website) return res.render(name, { page: name, sent: 'ok', form: {} });
-    const missing = def.required.filter((k) => !form[k]);
-    if (missing.length) return res.status(400).render(name, { page: name, sent: 'missing', form });
+    for (const [k] of def.fields) form[k] = String(req.body[k] || '').trim().slice(0, 2000);
+    if (def.required.some((k) => !form[k])) return res.status(400).render(name, { page: name, missing: true, form });
     const lines = def.fields.filter(([k]) => form[k]).map(([k, label]) => `${label}: ${form[k]}`);
-    const ok = await mailer.send({ subject: def.subject(form), text: lines.join('\n'), replyTo: form.email || undefined });
-    // Sem email configurado (ou se falhar), oferece o envio pelo WhatsApp com o texto já escrito.
-    res.render(name, { page: name, sent: ok ? 'ok' : 'whatsapp', waText: lines.join('\n'), form: ok ? {} : form });
-  }));
+    res.redirect(303, app.locals.waLink(`*${def.title}*\n${lines.join('\n')}`));
+  });
 }
 
 app.get('/api/viaturas', wrap(async (req, res) => {
