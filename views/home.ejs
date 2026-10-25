@@ -1,0 +1,56 @@
+<%- include('partials/header') %>
+<section class="hero">
+  <div class="container hero-inner">
+    <h1><%= stand.slogan %></h1>
+    <p class="hero-sub"><%= cars.length ? cars.length + ' viaturas disponíveis para entrega imediata' : 'Viaturas selecionadas e revistas' %></p>
+    <form class="search-box" action="/viaturas" method="get">
+      <select name="marca" aria-label="Marca">
+        <option value="">Todas as marcas</option>
+        <% makes.forEach(m => { %><option><%= m %></option><% }) %>
+      </select>
+      <select name="combustivel" aria-label="Combustível">
+        <option value="">Combustível</option>
+        <% fuels.forEach(f => { %><option><%= f %></option><% }) %>
+      </select>
+      <select name="precoMax" aria-label="Preço máximo">
+        <option value="">Preço até</option>
+        <% [5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000].forEach(p => { %><option value="<%= p %>"><%= fmtPrice(p) %></option><% }) %>
+      </select>
+      <button class="btn" type="submit">Pesquisar</button>
+    </form>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <h2>Últimas entradas</h2>
+      <a href="/viaturas" class="link-more">Ver todas as viaturas →</a>
+    </div>
+    <% if (featured.length) { %>
+      <div class="car-grid">
+        <% featured.forEach(c => { %><%- include('partials/card', { c }) %><% }) %>
+      </div>
+    <% } else { %><%- include('partials/empty') %><% } %>
+  </div>
+</section>
+
+<section class="section section-alt">
+  <div class="container features">
+    <div class="feature"><span>✅</span><h3>Viaturas revistas</h3><p>Todas as viaturas são inspecionadas antes da venda.</p></div>
+    <div class="feature"><span>🛡️</span><h3>Garantia</h3><p>Viaturas com garantia, para comprar com tranquilidade.</p></div>
+    <div class="feature"><span>💶</span><h3>Financiamento</h3><p>Soluções de crédito à medida, com resposta rápida.</p></div>
+    <div class="feature"><span>🔁</span><h3>Retoma</h3><p>Avaliamos a sua viatura e aceitamos como parte do pagamento.</p></div>
+  </div>
+</section>
+
+<section class="section cta">
+  <div class="container cta-inner">
+    <div>
+      <h2>Não encontrou o que procura?</h2>
+      <p>Diga-nos que viatura procura e nós encontramos por si.</p>
+    </div>
+    <a href="/contactos" class="btn btn-light">Fale connosco</a>
+  </div>
+</section>
+<%- include('partials/footer') %>

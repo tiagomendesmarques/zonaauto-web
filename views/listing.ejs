@@ -1,0 +1,68 @@
+<%- include('partials/header', { title: 'Viaturas usadas', description: 'Todas as viaturas disponíveis no stand ' + stand.name + '. Filtre por marca, preço, ano e combustível.' }) %>
+<section class="page-head">
+  <div class="container"><h1>Viaturas</h1><p><%= results.length %> de <%= total %> viaturas</p></div>
+</section>
+<section class="section">
+  <div class="container listing">
+    <aside class="filters">
+      <form method="get" action="/viaturas" id="filters">
+        <label>Pesquisa<input type="search" name="q" value="<%= filters.q %>" placeholder="Ex: Golf, BMW…"></label>
+        <label>Marca
+          <select name="marca" data-autosubmit><option value="">Todas</option>
+            <% makes.forEach(m => { %><option <%= filters.marca === m ? 'selected' : '' %>><%= m %></option><% }) %>
+          </select>
+        </label>
+        <label>Modelo
+          <select name="modelo" data-autosubmit><option value="">Todos</option>
+            <% models.forEach(m => { %><option <%= filters.modelo === m ? 'selected' : '' %>><%= m %></option><% }) %>
+          </select>
+        </label>
+        <label>Combustível
+          <select name="combustivel" data-autosubmit><option value="">Todos</option>
+            <% fuels.forEach(f => { %><option <%= filters.combustivel === f ? 'selected' : '' %>><%= f %></option><% }) %>
+          </select>
+        </label>
+        <label>Caixa
+          <select name="caixa" data-autosubmit><option value="">Todas</option>
+            <% gearboxes.forEach(g => { %><option <%= filters.caixa === g ? 'selected' : '' %>><%= g %></option><% }) %>
+          </select>
+        </label>
+        <div class="row2">
+          <label>Preço mín.<input type="number" name="precoMin" min="0" step="500" value="<%= filters.precoMin ?? '' %>"></label>
+          <label>Preço máx.<input type="number" name="precoMax" min="0" step="500" value="<%= filters.precoMax ?? '' %>"></label>
+        </div>
+        <div class="row2">
+          <label>Ano desde
+            <select name="anoMin" data-autosubmit><option value="">Qualquer</option>
+              <% years.forEach(y => { %><option <%= filters.anoMin === y ? 'selected' : '' %>><%= y %></option><% }) %>
+            </select>
+          </label>
+          <label>Km até<input type="number" name="kmMax" min="0" step="10000" value="<%= filters.kmMax ?? '' %>"></label>
+        </div>
+        <input type="hidden" name="ordem" value="<%= filters.ordem %>">
+        <button class="btn btn-block" type="submit">Aplicar filtros</button>
+        <a href="/viaturas" class="clear-filters">Limpar filtros</a>
+      </form>
+    </aside>
+    <div class="results">
+      <div class="results-bar">
+        <button class="btn btn-outline btn-sm filters-toggle" type="button">Filtros</button>
+        <label>Ordenar
+          <select id="sort">
+            <% [['recentes','Mais recentes'],['preco-asc','Preço: mais baixo'],['preco-desc','Preço: mais alto'],['km-asc','Menos km'],['ano-desc','Mais novos']].forEach(([v,l]) => { %>
+              <option value="<%= v %>" <%= filters.ordem === v ? 'selected' : '' %>><%= l %></option>
+            <% }) %>
+          </select>
+        </label>
+      </div>
+      <% if (results.length) { %>
+        <div class="car-grid">
+          <% results.forEach(c => { %><%- include('partials/card', { c }) %><% }) %>
+        </div>
+      <% } else if (total) { %>
+        <div class="empty"><h3>Sem resultados</h3><p>Nenhuma viatura corresponde aos filtros. <a href="/viaturas">Ver todas</a>.</p></div>
+      <% } else { %><%- include('partials/empty') %><% } %>
+    </div>
+  </div>
+</section>
+<%- include('partials/footer') %>

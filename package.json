@@ -1,0 +1,20 @@
+{
+  "name": "zonaauto",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site do stand Zona Auto com inventário sincronizado automaticamente do Standvirtual",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "sync": "node src/cli-sync.js"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.14.0",
+    "compression": "^1.7.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  }
+}

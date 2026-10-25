@@ -1,0 +1,17 @@
+<a class="car-card" href="/viaturas/<%= c.slug %>">
+  <div class="car-card-img">
+    <img src="<%= img(c.images[0], '640x480') %>" alt="<%= c.title %>" loading="lazy">
+    <% if (c.images.length > 1) { %><span class="photo-count">📷 <%= c.images.length %></span><% } %>
+  </div>
+  <div class="car-card-body">
+    <h3><%= carName(c) %></h3>
+    <p class="car-version"><%= c.version || c.title %></p>
+    <ul class="car-meta">
+      <% if (c.year) { %><li><%= c.month ? c.month + '/' : '' %><%= c.year %></li><% } %>
+      <% if (c.km != null) { %><li><%= fmtKm(c.km) %></li><% } %>
+      <% if (c.fuel) { %><li><%= c.fuel %></li><% } %>
+      <% if (c.gearbox) { %><li><%= c.gearbox %></li><% } %>
+    </ul>
+    <div class="car-price"><%= fmtPrice(c.price) %></div>
+  </div>
+</a>

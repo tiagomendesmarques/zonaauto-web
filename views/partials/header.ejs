@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' + stand.name : stand.name + ' — ' + stand.slogan %></title>
+  <meta name="description" content="<%= typeof description !== 'undefined' ? description : stand.name + ': ' + stand.slogan + '. Veja todas as viaturas disponíveis no nosso stand.' %>">
+  <% if (typeof ogImage !== 'undefined') { %><meta property="og:image" content="<%= ogImage %>"><% } %>
+  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : stand.name %>">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="logo" aria-label="<%= stand.name %>">
+      <img src="/static/img/logo.svg" alt="<%= stand.name %>" height="40">
+    </a>
+    <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
+    <nav class="main-nav">
+      <a href="/" class="<%= page === 'home' ? 'active' : '' %>">Início</a>
+      <a href="/viaturas" class="<%= page === 'viaturas' ? 'active' : '' %>">Viaturas</a>
+      <a href="/sobre" class="<%= page === 'sobre' ? 'active' : '' %>">Sobre nós</a>
+      <a href="/contactos" class="<%= page === 'contactos' ? 'active' : '' %>">Contactos</a>
+      <% if (stand.phone) { %><a href="tel:<%= stand.phone.replace(/\s/g, '') %>" class="btn btn-sm">📞 <%= stand.phone %></a><% } %>
+    </nav>
+  </div>
+</header>
+<main>
