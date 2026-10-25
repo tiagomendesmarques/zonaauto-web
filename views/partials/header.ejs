@@ -2,32 +2,33 @@
 <html lang="pt-PT">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><%= typeof title !== 'undefined' ? title + ' | ' + stand.name : stand.name + ' — ' + stand.slogan %></title>
-  <meta name="description" content="<%= typeof description !== 'undefined' ? description : stand.name + ': ' + stand.slogan + '. Veja todas as viaturas disponíveis no nosso stand.' %>">
-  <% if (typeof ogImage !== 'undefined') { %><meta property="og:image" content="<%= ogImage %>"><% } %>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><%= typeof title !== 'undefined' ? title + ' | ' + stand.name : stand.name + ' | Carros usados em Lisboa' %></title>
+  <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'Encontra, compara e escolhe o carro ideal com total confiança. Viaturas com garantia, financiamento e retoma.' %>">
   <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : stand.name %>">
   <meta property="og:type" content="website">
-  <link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+  <meta property="og:image" content="<%= typeof ogImage !== 'undefined' ? ogImage : siteUrl + '/static/img/hero-home.webp' %>">
+  <meta name="theme-color" content="#0e001e">
+  <link rel="icon" href="/static/img/favicon.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/static/img/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,100..125,400..900;1,100..125,400..900&family=Figtree:wght@400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
+<%- include('icons') %>
 <header class="site-header">
-  <div class="container header-inner">
-    <a href="/" class="logo" aria-label="<%= stand.name %>">
-      <img src="/static/img/logo.svg" alt="<%= stand.name %>" height="40">
-    </a>
-    <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
-    <nav class="main-nav">
-      <a href="/" class="<%= page === 'home' ? 'active' : '' %>">Início</a>
-      <a href="/viaturas" class="<%= page === 'viaturas' ? 'active' : '' %>">Viaturas</a>
-      <a href="/sobre" class="<%= page === 'sobre' ? 'active' : '' %>">Sobre nós</a>
-      <a href="/contactos" class="<%= page === 'contactos' ? 'active' : '' %>">Contactos</a>
-      <% if (stand.phone) { %><a href="tel:<%= stand.phone.replace(/\s/g, '') %>" class="btn btn-sm">📞 <%= stand.phone %></a><% } %>
+  <div class="wrap header-inner">
+    <a href="/" class="logo" aria-label="<%= stand.name %>, página inicial"><img src="/static/img/logo-branco.webp" alt="zonaauto.pt" width="146" height="44"></a>
+    <nav class="main-nav" aria-label="Principal">
+      <a href="/" <%- page === 'home' ? 'aria-current="page"' : '' %>>Início</a>
+      <a href="/stock/" <%- page === 'stock' ? 'aria-current="page"' : '' %>>Stock</a>
+      <a href="/importacao/" <%- page === 'importacao' ? 'aria-current="page"' : '' %>>Importação</a>
+      <a href="/contactos/" <%- page === 'contactos' ? 'aria-current="page"' : '' %>>Contactos</a>
     </nav>
+    <a class="header-phone" href="<%= telHref(stand.phone) %>"><span class="ic"><svg><use href="#i-phone"/></svg></span><span class="num"><%= stand.phone.replace('+351 ', '') %></span></a>
+    <button class="nav-toggle" type="button" aria-label="Abrir menu" aria-expanded="false"><svg><use href="#i-menu"/></svg></button>
   </div>
 </header>
 <main>

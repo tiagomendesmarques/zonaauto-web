@@ -1,14 +1,19 @@
 // Recolhe o inventário do stand no Standvirtual.
 //
-// Estratégia (pensada para resistir a mudanças no layout do Standvirtual):
-//  1. Percorre as páginas do inventário do stand e recolhe todos os links de anúncios.
-//  2. Abre cada anúncio e extrai os dados de três fontes, por ordem de riqueza:
-//     __NEXT_DATA__ (JSON da aplicação Next.js), JSON-LD (schema.org) e meta tags.
-//  3. Normaliza tudo para um objeto "viatura" simples, usado pelo site.
+//  1. Lê as páginas do inventário do stand (https://<stand>.standvirtual.com/inventory?page=N).
+//     Cada página traz até 30 anúncios com fotos, preço e características (publishedAds).
+//  2. Abre cada anúncio em www.standvirtual.com para obter o resto: descrição, todas as fotos,
+//     características com nomes legíveis e equipamento agrupado.
+//  3. Se a página de um anúncio falhar, a viatura aparece na mesma com os dados do inventário.
 const config = require('./config');
 
 const AD_LINK_RE = /https?:\/\/(?:www\.)?standvirtual\.com\/[a-z-]+\/anuncio\/[^"'\s<>\\]+?-ID[0-9A-Za-z]+\.html/g;
-const AD_PATH_RE = /["'](\/[a-z-]+\/anuncio\/[^"'\s<>\\]+?-ID[0-9A-Za-z]+\.html)/g;
+
+// Campos que não interessam ao cliente (internos ou encriptados)
+const HIDDEN_KEYS = new Set([
+  'vin', 'catalog_urn', 'version_label', 'autorenew', 'cant_see_my_version', 'is_imported_car', 'classic',
+  'registration', 'date_registration', 'video', 'financial_option', 'leasing_concession',
+]);
 
 async function fetchHtml(url, attempt = 1) {
   const ctrl = new AbortController();
@@ -37,7 +42,7 @@ async function fetchHtml(url, attempt = 1) {
   }
 }
 
-// ---------- utilitários de parsing ----------
+// ---------- utilitários ----------
 
 function decodeEntities(s) {
   return String(s)
@@ -50,22 +55,32 @@ function decodeEntities(s) {
     .replace(/&amp;/g, '&');
 }
 
-function htmlToText(html) {
-  if (!html) return '';
-  return decodeEntities(
-    String(html)
-      .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/<\/(p|div|li|h\d)>/gi, '\n')
-      .replace(/<li[^>]*>/gi, '• ')
-      .replace(/<[^>]+>/g, '')
-  )
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n\s*\n\s*\n+/g, '\n\n')
-    .trim();
+// Converte o HTML da descrição numa lista simples de blocos {type: 'p'|'li', text, bold}
+// para ser desenhada de forma segura nos templates.
+function descriptionBlocks(html) {
+  if (!html) return [];
+  const blocks = [];
+  // Blocos <p>/<li>/<h*>, texto solto, e outras etiquetas (<ul>, <br>…) que são ignoradas
+  const re = /<(p|li|h\d)[^>]*>([\s\S]*?)<\/\1>|([^<]+)|<[^>]*>/gi;
+  const clean = (s) => decodeEntities(String(s).replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '')).replace(/[ \t]+/g, ' ').trim();
+  let m;
+  while ((m = re.exec(html))) {
+    if (!m[1] && !m[3]) continue;
+    if (m[3]) {
+      const t = clean(m[3]);
+      if (t) blocks.push({ type: 'p', text: t, bold: false });
+      continue;
+    }
+    const text = clean(m[2]);
+    if (!text) continue;
+    const bold = /^\s*<(b|strong)>[\s\S]*<\/(b|strong)>\s*$/i.test(m[2]);
+    blocks.push({ type: m[1].toLowerCase() === 'li' ? 'li' : 'p', text, bold });
+  }
+  return blocks;
 }
 
 function extractNextData(html) {
-  const m = html.match(/<script[^>]+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+  const m = html && html.match(/<script[^>]+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
   if (!m) return null;
   try {
     return JSON.parse(m[1]);
@@ -74,55 +89,19 @@ function extractNextData(html) {
   }
 }
 
-function extractJsonLd(html) {
-  const out = [];
-  const re = /<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g;
-  let m;
-  while ((m = re.exec(html))) {
-    try {
-      const data = JSON.parse(m[1]);
-      const items = Array.isArray(data) ? data : data['@graph'] || [data];
-      out.push(...items);
-    } catch {
-      /* ignora blocos inválidos */
-    }
-  }
-  return out;
-}
-
-function meta(html, prop) {
-  const re = new RegExp(`<meta[^>]+(?:property|name)="${prop}"[^>]+content="([^"]*)"`, 'i');
-  const m = html.match(re);
-  return m ? decodeEntities(m[1]) : '';
-}
-
-// Percorre um objeto JSON em profundidade e devolve o primeiro nó que satisfaz `test`.
-function findDeep(obj, test, depth = 0, seen = new Set()) {
-  if (!obj || typeof obj !== 'object' || depth > 14 || seen.has(obj)) return null;
-  seen.add(obj);
-  if (test(obj)) return obj;
-  for (const v of Object.values(obj)) {
-    const found = findDeep(v, test, depth + 1, seen);
-    if (found) return found;
-  }
-  return null;
-}
-
-// Alguns dados do Next.js vêm como strings JSON embebidas (ex.: estado urql/apollo).
-function expandJsonStrings(obj, depth = 0) {
-  if (!obj || typeof obj !== 'object' || depth > 10) return obj;
-  for (const [k, v] of Object.entries(obj)) {
-    if (typeof v === 'string' && v.length > 50 && (v[0] === '{' || v[0] === '[')) {
+// O estado urql do Next.js vem como strings JSON; devolve todos os blocos já descodificados.
+function urqlData(next) {
+  const state = next && next.props && next.props.pageProps && next.props.pageProps.urqlState;
+  if (!state) return [];
+  return Object.values(state)
+    .map((v) => {
       try {
-        obj[k] = expandJsonStrings(JSON.parse(v), depth + 1);
+        return typeof v.data === 'string' ? JSON.parse(v.data) : v.data;
       } catch {
-        /* não era JSON */
+        return null;
       }
-    } else if (v && typeof v === 'object') {
-      expandJsonStrings(v, depth + 1);
-    }
-  }
-  return obj;
+    })
+    .filter(Boolean);
 }
 
 function toNumber(v) {
@@ -146,167 +125,137 @@ function slugify(s) {
     .slice(0, 80);
 }
 
-// ---------- listagem ----------
+const adCode = (url) => (url.match(/-ID([0-9A-Za-z]+)\.html/) || [])[1] || null;
 
-async function listAdvertUrls() {
+// ---------- inventário do stand ----------
+
+function parseStand(next) {
+  for (const d of urqlData(next)) {
+    const s = d.professionalSellerBySubdomain;
+    if (!s) continue;
+    const a = s.address || {};
+    const loc = a.location || {};
+    return {
+      name: s.businessName || s.name,
+      address: [a.address, [a.postalCode, loc.city && loc.city.name].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+      latitude: loc.latitude,
+      longitude: loc.longitude,
+      logo: s.logo && s.logo.url,
+    };
+  }
+  return null;
+}
+
+async function listInventory() {
   const base = config.standvirtual.inventoryUrl;
-  const urls = new Set();
+  const ads = new Map();
+  let stand = null;
   for (let page = 1; page <= config.standvirtual.maxPages; page++) {
-    const pageUrl = page === 1 ? base : `${base}${base.includes('?') ? '&' : '?'}page=${page}`;
-    const html = await fetchHtml(pageUrl);
+    const html = await fetchHtml(page === 1 ? base : `${base}${base.includes('?') ? '&' : '?'}page=${page}`);
     if (!html) break;
-    const before = urls.size;
-    for (const m of html.matchAll(AD_LINK_RE)) urls.add(m[0].replace('http://', 'https://'));
-    for (const m of html.matchAll(AD_PATH_RE)) urls.add(`https://www.standvirtual.com${m[1]}`);
-    if (urls.size === before) break; // página sem anúncios novos → fim
+    const next = extractNextData(html);
+    if (page === 1) stand = parseStand(next);
+    const published = urqlData(next).map((d) => d.publishedAds).find(Boolean);
+    const before = ads.size;
+    if (published) {
+      for (const ad of published.ads || []) if (ad.url) ads.set(adCode(ad.url) || ad.id, ad);
+    } else {
+      // Plano B se a estrutura mudar: apanha só os links dos anúncios.
+      for (const m of html.matchAll(AD_LINK_RE)) ads.set(adCode(m[0]), ads.get(adCode(m[0])) || { url: m[0] });
+    }
+    if (ads.size === before || (published && ads.size >= published.total)) break;
   }
-  return [...urls].map((u) => u.replace('https://standvirtual.com', 'https://www.standvirtual.com'));
+  return { stand, ads: [...ads.values()] };
 }
 
-// ---------- detalhe ----------
+// ---------- normalização de uma viatura ----------
 
-// Mapeia chaves/etiquetas do Standvirtual para os campos normalizados.
-const FIELD_MATCHERS = {
-  make: [/^make$/, /^marca$/i],
-  model: [/^model$/, /^modelo$/i],
-  version: [/^version$/, /^vers[aã]o$/i],
-  year: [/first_registration_year|^year$/, /^ano/i],
-  month: [/first_registration_month/, /^m[eê]s/i],
-  km: [/^mileage$/, /quil[oó]metros|^km$/i],
-  fuel: [/fuel_type/, /combust[ií]vel/i],
-  gearbox: [/^gearbox$/, /caixa/i],
-  power: [/engine_power/, /pot[eê]ncia/i],
-  engineCc: [/engine_capacity/, /cilindrada/i],
-  doors: [/door_count/, /portas/i],
-  seats: [/nr_seats/, /lota[cç][aã]o|lugares/i],
-  color: [/^color$/, /^cor$/i],
-  body: [/body_type|segment/, /segmento|carro[cç]aria|tipo de ve[ií]culo/i],
-  traction: [/transmission/, /tra[cç][aã]o/i],
-  condition: [/^new_used$|^condition$/, /condi[cç][aã]o|estado/i],
-};
-
-function pickSpec(specs, field) {
-  const [keyRe, labelRe] = FIELD_MATCHERS[field];
-  const hit = specs.find((s) => (s.key && keyRe.test(s.key)) || (s.label && labelRe.test(s.label)));
-  return hit ? hit.value : null;
+function attrsToSpecs(attributes) {
+  return (attributes || [])
+    .filter((a) => !HIDDEN_KEYS.has(a.key))
+    .map((a) => ({ key: a.key, label: null, value: `${a.valueLabel}${a.valueSuffix ? ' ' + a.valueSuffix : ''}`.trim() }));
 }
 
-function specsFromAdvert(advert) {
-  const specs = [];
-  const push = (key, label, value) => {
-    if (value == null || value === '') return;
-    if (typeof value === 'object') value = value.label ?? value.value ?? value.name ?? '';
-    value = String(value).trim();
-    if (value && !specs.some((s) => (key && s.key === key) || s.label === label)) specs.push({ key, label, value });
-  };
-  for (const d of advert.details || advert.parameters || []) {
-    push(d.key, d.label || d.name, d.value ?? d.displayValue ?? (d.values && d.values.map((v) => v.label).join(', ')));
-  }
-  for (const [key, d] of Object.entries(advert.parametersDict || {})) {
-    const vals = d && d.values ? d.values.map((v) => v.label || v.value).join(', ') : d && d.value;
-    push(key, d && d.label, vals);
-  }
-  return specs;
+function detailsToSpecs(details) {
+  return (details || [])
+    .filter((d) => d.key && !HIDDEN_KEYS.has(d.key) && d.label && d.label !== d.key && d.value != null && d.value !== '')
+    .map((d) => ({ key: d.key, label: d.label, value: String(d.value), group: d.group || null }));
 }
 
-function equipmentFromAdvert(advert) {
-  const groups = [];
-  for (const g of advert.equipment || []) {
-    const items = (g.values || g.items || []).map((v) => (typeof v === 'string' ? v : v.label || v.name)).filter(Boolean);
-    if (items.length) groups.push({ group: g.label || g.name || 'Equipamento', items });
-  }
-  return groups;
-}
-
-function imagesFromAdvert(advert) {
-  const list = (advert.images && (advert.images.photos || advert.images)) || advert.photos || [];
-  return (Array.isArray(list) ? list : [])
-    .map((p) => (typeof p === 'string' ? p : p.url || p.src || (p.urls && Object.values(p.urls).pop())))
-    .filter(Boolean);
-}
-
-function parseAdvertPage(html, url) {
-  const idMatch = url.match(/-ID([0-9A-Za-z]+)\.html/);
-  const id = idMatch ? idMatch[1] : slugify(url);
-
-  // 1) __NEXT_DATA__
-  const next = extractNextData(html);
-  let advert = null;
-  if (next) {
-    expandJsonStrings(next);
-    advert =
-      findDeep(next, (o) => o.advert && typeof o.advert === 'object' && (o.advert.title || o.advert.id))?.advert ||
-      findDeep(next, (o) => o.title && o.price && (o.details || o.parametersDict || o.images));
-  }
+function buildCar(listAd, advert) {
   advert = advert || {};
+  const url = advert.url || listAd.url;
+  const code = adCode(url) || String(listAd.id || advert.id);
 
-  // 2) JSON-LD
-  const ld = extractJsonLd(html);
-  const car =
-    ld.find((x) => /car|vehicle/i.test([].concat(x['@type']).join(','))) ||
-    ld.find((x) => /product/i.test([].concat(x['@type']).join(','))) ||
-    {};
-  const offer = [].concat(car.offers || [])[0] || {};
-
-  // 3) especificações combinadas
-  const specs = specsFromAdvert(advert);
-  const ldSpecs = [
-    ['make', 'Marca', car.brand && (car.brand.name || car.brand)],
-    ['model', 'Modelo', car.model],
-    ['first_registration_year', 'Ano', car.vehicleModelDate || car.productionDate],
-    ['mileage', 'Quilómetros', car.mileageFromOdometer && (car.mileageFromOdometer.value ?? car.mileageFromOdometer)],
-    ['fuel_type', 'Combustível', car.fuelType],
-    ['gearbox', 'Tipo de Caixa', car.vehicleTransmission],
-    ['color', 'Cor', car.color],
-    ['door_count', 'Nº de Portas', car.numberOfDoors],
-    ['body_type', 'Segmento', car.bodyType],
-  ];
-  for (const [key, label, value] of ldSpecs) {
-    if (value && !specs.some((s) => s.key === key || s.label === label)) specs.push({ key, label, value: String(value) });
+  const detailSpecs = detailsToSpecs(advert.details);
+  const specs = detailSpecs.length ? detailSpecs : attrsToSpecs(listAd.attributes);
+  // Valores "em bruto" para os campos principais (atributos do inventário + detalhes)
+  const raw = {};
+  for (const a of listAd.attributes || []) raw[a.key] = `${a.valueLabel}${a.valueSuffix ? ' ' + a.valueSuffix : ''}`.trim();
+  for (const s of specs) raw[s.key] = s.value;
+  for (const [k, p] of Object.entries(advert.parametersDict || {})) {
+    if (raw[k] == null && p && p.values && p.values[0]) raw[k] = p.values[0].label || p.values[0].value;
   }
 
-  const priceObj = advert.price || {};
-  const price =
-    toNumber(priceObj.value ?? priceObj.amount?.value ?? priceObj.amount ?? (typeof priceObj !== 'object' ? priceObj : null)) ??
-    toNumber(offer.price) ??
-    toNumber(meta(html, 'product:price:amount'));
+  const listPrice = listAd.price && listAd.price.grossMinorAmount != null ? listAd.price.grossMinorAmount / 100 : null;
+  const price = toNumber(advert.price && advert.price.value) ?? listPrice;
+  const priceLabels = (advert.price && advert.price.labels) || [];
+  const drop = advert.priceDrop || null;
+  const oldPrice =
+    drop && typeof drop === 'object'
+      ? toNumber(drop.previousPrice?.value ?? drop.oldPrice?.value ?? drop.previousPrice ?? drop.oldPrice ?? null)
+      : null;
 
-  const title = advert.title || car.name || meta(html, 'og:title').replace(/\s*[-|]\s*Standvirtual.*$/i, '');
-  let images = imagesFromAdvert(advert);
-  if (!images.length) images = [].concat(car.image || []).map((i) => (typeof i === 'string' ? i : i.url)).filter(Boolean);
-  if (!images.length && meta(html, 'og:image')) images = [meta(html, 'og:image')];
+  const photos = (advert.images && advert.images.photos ? advert.images.photos.map((p) => p.url || p.id) : listAd.photos || []).filter(Boolean);
 
-  const v = {
-    id,
+  const equipment = (advert.equipment || [])
+    .map((g) => ({ group: g.label, items: (g.values || []).map((v) => v.label).filter(Boolean) }))
+    .filter((g) => g.items.length);
+
+  const car = {
+    id: code,
+    adId: String(advert.id || listAd.id || ''),
     sourceUrl: url,
-    title: decodeEntities(title || '').trim(),
+    title: decodeEntities(advert.title || listAd.title || '').trim(),
     price,
-    currency: priceObj.currency || offer.priceCurrency || 'EUR',
-    negotiable: /negoci/i.test(JSON.stringify(priceObj.labels || priceObj.badges || '')),
-    vatDeductible: /iva/i.test(JSON.stringify(priceObj.labels || priceObj.badges || '')),
-    make: pickSpec(specs, 'make'),
-    model: pickSpec(specs, 'model'),
-    version: pickSpec(specs, 'version'),
-    year: toNumber(pickSpec(specs, 'year')),
-    month: pickSpec(specs, 'month'),
-    km: toNumber(pickSpec(specs, 'km')),
-    fuel: pickSpec(specs, 'fuel'),
-    gearbox: pickSpec(specs, 'gearbox'),
-    power: toNumber(pickSpec(specs, 'power')),
-    engineCc: toNumber(pickSpec(specs, 'engineCc')),
-    doors: toNumber(pickSpec(specs, 'doors')),
-    seats: toNumber(pickSpec(specs, 'seats')),
-    color: pickSpec(specs, 'color'),
-    body: pickSpec(specs, 'body'),
-    traction: pickSpec(specs, 'traction'),
-    description: htmlToText(advert.description || car.description || meta(html, 'og:description')),
-    images: [...new Set(images)],
+    oldPrice: oldPrice && price && oldPrice > price ? oldPrice : null,
+    currency: (advert.price && advert.price.currency) || (listAd.price && listAd.price.currencyCode) || 'EUR',
+    negotiable: priceLabels.some((l) => /negoti/i.test(l)),
+    vatDeductible: priceLabels.some((l) => /vat|iva/i.test(l)) || (listAd.price && listAd.price.isNet === true),
+    make: raw.make || null,
+    model: raw.model || null,
+    version: raw.version || null,
+    year: toNumber(raw.first_registration_year),
+    month: raw.first_registration_month || null,
+    km: toNumber(raw.mileage),
+    fuel: raw.fuel_type || null,
+    gearbox: raw.gearbox || null,
+    power: toNumber(raw.engine_power),
+    engineCc: toNumber(raw.engine_capacity),
+    doors: toNumber(raw.door_count),
+    seats: toNumber(raw.nr_seats),
+    color: raw.color || null,
+    body: raw.body_type || null,
+    traction: raw.transmission || null,
+    condition: raw.new_used || null,
+    warranty: raw.vendors_warranty_valid_until_date || null,
+    funding: raw.accept_funding === 'Sim',
+    tradeIn: raw.accept_returns === 'Sim',
+    description: descriptionBlocks(advert.description),
+    images: [...new Set(photos)],
     specs,
-    equipment: equipmentFromAdvert(advert),
-    createdAt: advert.createdAt || advert.created_at || null,
+    equipment,
+    createdAt: advert.originalCreatedAt || advert.createdAt || null,
+    updatedAt: advert.updatedAt || null,
   };
-  v.slug = `${slugify([v.make, v.model, v.version].filter(Boolean).join(' ') || v.title)}-${v.id}`.toLowerCase();
-  return v;
+  const name = [car.make, car.model, car.version].filter(Boolean).join(' ') || car.title;
+  car.slug = `${slugify(`${name} ${car.year || ''}`)}-${code}`.toLowerCase();
+  return car;
+}
+
+function parseAdvertPage(html) {
+  const next = extractNextData(html);
+  return (next && next.props && next.props.pageProps && next.props.pageProps.advert) || null;
 }
 
 async function mapLimit(items, limit, fn) {
@@ -315,12 +264,7 @@ async function mapLimit(items, limit, fn) {
   const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
     while (i < items.length) {
       const idx = i++;
-      try {
-        results[idx] = await fn(items[idx]);
-      } catch (err) {
-        console.error(`[sync] falhou ${items[idx]}: ${err.message}`);
-        results[idx] = null;
-      }
+      results[idx] = await fn(items[idx]);
     }
   });
   await Promise.all(workers);
@@ -329,16 +273,25 @@ async function mapLimit(items, limit, fn) {
 
 async function scrapeInventory() {
   const started = Date.now();
-  const urls = await listAdvertUrls();
-  if (!urls.length) throw new Error('Nenhum anúncio encontrado no inventário do Standvirtual');
-  const cars = (
-    await mapLimit(urls, config.standvirtual.concurrency, async (url) => {
-      const html = await fetchHtml(url);
-      return html ? parseAdvertPage(html, url) : null;
-    })
-  ).filter((c) => c && c.title);
-  console.log(`[sync] ${cars.length}/${urls.length} viaturas em ${((Date.now() - started) / 1000).toFixed(1)}s`);
-  return cars;
+  const { stand, ads } = await listInventory();
+  if (!ads.length) throw new Error('Nenhum anúncio encontrado no inventário do Standvirtual');
+  let enriched = 0;
+  const cars = await mapLimit(ads, config.standvirtual.concurrency, async (ad) => {
+    let advert = null;
+    try {
+      const html = await fetchHtml(ad.url);
+      if (html === null) return null; // anúncio removido entretanto
+      advert = parseAdvertPage(html);
+      if (advert) enriched++;
+    } catch (err) {
+      console.error(`[sync] detalhe falhou ${ad.url}: ${err.message}`);
+    }
+    if (!advert && !ad.title) return null;
+    return buildCar(ad, advert);
+  });
+  const valid = cars.filter((c) => c && c.title);
+  console.log(`[sync] ${valid.length} viaturas (${enriched} com detalhe completo) em ${((Date.now() - started) / 1000).toFixed(1)}s`);
+  return { stand, cars: valid };
 }
 
-module.exports = { scrapeInventory, listAdvertUrls, parseAdvertPage, fetchHtml, slugify };
+module.exports = { scrapeInventory, listInventory, buildCar, parseAdvertPage, descriptionBlocks, fetchHtml, slugify, toNumber };

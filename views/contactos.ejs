@@ -1,0 +1,34 @@
+<%- include('partials/header', { title: 'Contactos', description: `Fala connosco: ${stand.phone}, ${stand.email}. ${stand.street}, ${stand.city}.` }) %>
+<section class="page-head on-dark">
+  <img src="/static/img/hero-contactos.webp" alt="" style="object-position:center 35%">
+  <div class="wrap">
+    <p class="eyebrow">Contactos</p>
+    <h1 class="display">Fala connosco sobre o teu próximo carro.</h1>
+    <p class="lead">Respondemos de forma rápida e clara a todas as tuas questões, seja sobre viaturas, financiamento ou disponibilidade.</p>
+  </div>
+</section>
+<section class="section" style="padding-top:48px">
+  <div class="wrap">
+    <div class="form-layout">
+      <form class="form-card" method="post" action="/contactos/">
+        <div><h2>Envia-nos uma mensagem</h2><p class="lead" style="font-size:16px;margin-top:8px">Ou fala diretamente pelo WhatsApp, é o mais rápido.</p></div>
+        <%- include('partials/form-alert') %>
+        <div class="form-grid">
+          <div class="input"><label for="c-nome">Nome *</label><input id="c-nome" name="nome" required autocomplete="name" value="<%= form.nome || '' %>"></div>
+          <div class="input"><label for="c-tel">Telemóvel</label><input id="c-tel" name="telemovel" type="tel" autocomplete="tel" value="<%= form.telemovel || '' %>"></div>
+          <div class="input full"><label for="c-email">Email</label><input id="c-email" name="email" type="email" autocomplete="email" value="<%= form.email || '' %>"></div>
+          <div class="input full"><label for="c-msg">Mensagem *</label><textarea id="c-msg" name="mensagem" required placeholder="Em que podemos ajudar?"><%= form.mensagem || '' %></textarea></div>
+          <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        </div>
+        <div class="band-actions" style="margin:0">
+          <button class="btn btn-primary" type="submit">Enviar mensagem<svg><use href="#i-arrow"/></svg></button>
+          <a class="btn btn-wa" href="<%= waLink('Olá! Gostaria de mais informações.') %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>WhatsApp</a>
+        </div>
+        <p class="form-note">Ao enviar aceitas a nossa <a href="/politica-de-privacidade/">política de privacidade</a>.</p>
+      </form>
+      <%- include('partials/contact-card') %>
+    </div>
+    <div class="map"><iframe src="<%= mapsEmbed %>" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa: <%= stand.street %>"></iframe></div>
+  </div>
+</section>
+<%- include('partials/footer') %>

@@ -1,0 +1,35 @@
+<%- include('partials/header', { title: 'Política de privacidade' }) %>
+<%- include('partials/legal-head', { heading: 'Política de privacidade' }) %>
+<section class="section"><div class="wrap prose">
+  <p>A sua privacidade é importante para nós. Esta Política de Privacidade descreve como a <%= stand.name %> recolhe, utiliza e protege os dados pessoais dos utilizadores do website.</p>
+  <h2>1. Identificação do responsável pelo tratamento</h2>
+  <p><%= stand.name %><br>Morada: <%= stand.street %>, <%= stand.city %><br>Email: <a href="mailto:<%= stand.email %>"><%= stand.email %></a></p>
+  <h2>2. Dados pessoais recolhidos</h2>
+  <p>Podemos recolher os seguintes dados pessoais através do website:</p>
+  <ul><li>Nome</li><li>Número de telefone</li><li>Endereço de email</li><li>Informações fornecidas em formulários de contacto ou pedidos de informação</li><li>Dados de navegação (cookies, endereço IP, localização aproximada)</li></ul>
+  <h2>3. Finalidade do tratamento</h2>
+  <p>Os dados pessoais recolhidos são utilizados para:</p>
+  <ul><li>Responder a pedidos de contacto e informações</li><li>Gestão de clientes e potenciais clientes</li><li>Apresentação de propostas comerciais</li><li>Processamento de pedidos de compra ou serviços</li><li>Melhoria da experiência no website</li><li>Cumprimento de obrigações legais</li></ul>
+  <h2>4. Fundamento legal</h2>
+  <p>O tratamento dos dados pessoais baseia-se em:</p>
+  <ul><li>Consentimento do titular dos dados</li><li>Execução de um contrato ou diligências pré-contratuais</li><li>Cumprimento de obrigações legais</li><li>Interesse legítimo da empresa (ex.: melhoria dos serviços)</li></ul>
+  <h2>5. Partilha de dados</h2>
+  <p>Os dados pessoais podem ser partilhados com:</p>
+  <ul><li>Entidades financeiras (no âmbito de pedidos de financiamento)</li><li>Prestadores de serviços (ex.: alojamento do website, ferramentas de marketing)</li><li>Autoridades legais, quando exigido por lei</li></ul>
+  <p>A <%= stand.name %> não vende nem cede os seus dados a terceiros para fins comerciais.</p>
+  <h2>6. Conservação dos dados</h2>
+  <p>Os dados pessoais serão conservados apenas pelo período necessário para cumprir as finalidades para que foram recolhidos ou conforme exigido por lei.</p>
+  <h2>7. Direitos do titular dos dados</h2>
+  <p>Nos termos da legislação aplicável, o utilizador tem o direito de:</p>
+  <ul><li>Aceder aos seus dados pessoais</li><li>Retificar dados incorretos</li><li>Solicitar a eliminação dos dados</li><li>Limitar ou opor-se ao tratamento</li><li>Solicitar a portabilidade dos dados</li></ul>
+  <p>Para exercer os seus direitos, deverá contactar: <a href="mailto:<%= stand.email %>"><%= stand.email %></a></p>
+  <h2>8. Segurança dos dados</h2>
+  <p>Adotamos medidas técnicas e organizativas adequadas para proteger os dados pessoais contra perda, uso indevido, acesso não autorizado ou divulgação.</p>
+  <h2>9. Cookies</h2>
+  <p>O website pode utilizar cookies para melhorar a experiência do utilizador. Pode configurar o seu navegador para recusar cookies, embora isso possa afetar o funcionamento do website.</p>
+  <h2>10. Alterações a esta política</h2>
+  <p>A <%= stand.name %> reserva-se o direito de atualizar esta Política de Privacidade a qualquer momento. Recomendamos a consulta regular desta página.</p>
+  <h2>11. Contacto</h2>
+  <p>Para qualquer questão relacionada com esta Política de Privacidade ou tratamento de dados, contacte:<br>Email: <a href="mailto:<%= stand.email %>"><%= stand.email %></a><br>Morada: <%= stand.street %>, <%= stand.city %></p>
+</div></section>
+<%- include('partials/footer') %>

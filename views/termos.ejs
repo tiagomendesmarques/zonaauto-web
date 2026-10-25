@@ -1,0 +1,45 @@
+<%- include('partials/header', { title: 'Termos e condições de utilização' }) %>
+<%- include('partials/legal-head', { heading: 'Termos e condições de utilização' }) %>
+<section class="section"><div class="wrap prose">
+  <p>Bem-vindo ao website da <%= stand.name %>. Ao aceder e utilizar este website, concorda com os presentes Termos e Condições. Caso não concorde, não deverá utilizar este website.</p>
+  <h2>1. Identificação</h2>
+  <p><%= stand.name %><br>Morada: <%= stand.street %>, <%= stand.city %><br>Email: <a href="mailto:<%= stand.email %>"><%= stand.email %></a></p>
+  <h2>2. Objeto</h2>
+  <p>O presente website tem como objetivo disponibilizar informação sobre veículos automóveis, serviços associados (financiamento, retomas, importação) e permitir o contacto com potenciais clientes.</p>
+  <h2>3. Utilização do website</h2>
+  <p>O utilizador compromete-se a:</p>
+  <ul><li>Utilizar o website de forma legal e responsável</li><li>Não introduzir informações falsas ou enganosas</li><li>Não tentar aceder a áreas restritas ou comprometer o funcionamento do website</li></ul>
+  <p>A <%= stand.name %> reserva-se o direito de suspender o acesso em caso de utilização indevida.</p>
+  <h2>4. Informação sobre veículos</h2>
+  <p>A <%= stand.name %> compromete-se a fornecer informação o mais precisa possível. No entanto:</p>
+  <ul><li>As informações apresentadas (preços, características, disponibilidade) podem ser alteradas sem aviso prévio</li><li>Podem existir erros tipográficos ou imprecisões</li><li>As imagens são ilustrativas e podem não corresponder exatamente ao veículo</li></ul>
+  <p>Recomenda-se sempre a confirmação direta com a equipa comercial.</p>
+  <h2>5. Preços e condições comerciais</h2>
+  <ul><li>Os preços apresentados podem incluir ou não custos adicionais (ex.: despesas administrativas, transporte, legalização)</li><li>Todas as condições devem ser confirmadas antes da conclusão do negócio</li><li>A <%= stand.name %> reserva-se o direito de alterar preços sem aviso prévio</li></ul>
+  <h2>6. Financiamento</h2>
+  <p>As soluções de financiamento apresentadas estão sujeitas a aprovação por entidades financeiras parceiras.</p>
+  <ul><li>A aprovação depende da análise de crédito do cliente</li><li>As condições podem variar conforme o perfil do cliente</li><li>A <%= stand.name %> atua como intermediário, não sendo responsável pela decisão final</li></ul>
+  <h2>7. Retomas</h2>
+  <p>A aceitação de veículos em retoma está sujeita a avaliação.</p>
+  <ul><li>O valor apresentado depende do estado do veículo e do mercado</li><li>A avaliação final poderá ser ajustada após inspeção presencial</li></ul>
+  <h2>8. Importação de veículos</h2>
+  <p>No serviço de importação por encomenda:</p>
+  <ul><li>A <%= stand.name %> atua como intermediário no processo</li><li>Os prazos e custos podem variar consoante o veículo e origem</li><li>O cliente será informado de todas as condições antes da formalização</li></ul>
+  <h2>9. Garantias</h2>
+  <p>Os veículos vendidos podem incluir garantia, conforme acordado no momento da venda.</p>
+  <ul><li>As condições da garantia serão especificadas em contrato</li><li>A cobertura pode variar consoante o veículo</li></ul>
+  <h2>10. Limitação de responsabilidade</h2>
+  <p>A <%= stand.name %> não se responsabiliza por:</p>
+  <ul><li>Danos resultantes da utilização do website</li><li>Interrupções ou falhas técnicas</li><li>Decisões tomadas com base na informação disponível no website</li></ul>
+  <h2>11. Propriedade intelectual</h2>
+  <p>Todos os conteúdos do website (textos, imagens, logótipos) são propriedade da <%= stand.name %> ou utilizados com autorização. É proibida a sua reprodução sem consentimento prévio.</p>
+  <h2>12. Proteção de dados</h2>
+  <p>O tratamento de dados pessoais é regido pela <a href="/politica-de-privacidade/">Política de Privacidade</a> disponível neste website.</p>
+  <h2>13. Alterações aos termos</h2>
+  <p>A <%= stand.name %> reserva-se o direito de alterar os presentes Termos e Condições a qualquer momento, sem aviso prévio.</p>
+  <h2>14. Lei aplicável</h2>
+  <p>Os presentes Termos e Condições são regidos pela lei portuguesa. Em caso de litígio, será competente o foro da área de Lisboa.</p>
+  <h2>15. Contacto</h2>
+  <p>Para qualquer questão relacionada com estes Termos e Condições:<br>Email: <a href="mailto:<%= stand.email %>"><%= stand.email %></a><br>Morada: <%= stand.street %>, <%= stand.city %></p>
+</div></section>
+<%- include('partials/footer') %>

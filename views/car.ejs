@@ -1,98 +1,155 @@
 <%
   const name = carName(car);
-  const fullTitle = [name, car.version].filter(Boolean).join(' ');
-  const msg = `Olá! Tenho interesse no ${fullTitle}${car.year ? ' de ' + car.year : ''} (${fmtPrice(car.price)}) que vi no vosso site: ${siteUrl}/viaturas/${car.slug}`;
-  const wa = whatsappLink(msg);
-  const highlights = [
-    ['Ano', car.year ? (car.month ? car.month + '/' : '') + car.year : null],
-    ['Quilómetros', car.km != null ? fmtKm(car.km) : null],
-    ['Combustível', car.fuel],
-    ['Caixa', car.gearbox],
-    ['Potência', car.power ? car.power + ' cv' : null],
-    ['Cilindrada', car.engineCc ? fmtNum(car.engineCc) + ' cm³' : null],
-  ].filter(([, v]) => v);
+  const full = [name, car.version].filter(Boolean).join(' ');
+  const ref = `${full}${car.year ? ' de ' + car.year : ''} (${fmtPrice(car.price)})`;
+  const link = `${siteUrl}${carUrl(car)}`;
+  const waInfo = `Olá! Tenho interesse no ${ref}. ${link}`;
+  const waVisit = `Olá! Gostaria de agendar uma visita para ver o ${ref}. ${link}`;
+  const spec = (k) => (car.specs.find((s) => s.key === k) || {}).value;
+  const keyspecs = [
+    ['Registo', fmtDate(car)], ['Quilómetros', car.km != null ? fmtKm(car.km) : null], ['Combustível', car.fuel],
+    ['Caixa', car.gearbox], ['Potência', car.power ? car.power + ' cv' : null], ['Cilindrada', car.engineCc ? fmtNum(car.engineCc) + ' cm³' : null],
+  ].filter(([, v]) => v && v !== '—');
+  const chips = [
+    car.warranty && ['i-shield', 'Garantia ' + car.warranty.toLowerCase()],
+    spec('complete_review_book') === 'Sim' && ['i-book', 'Livro de revisões completo'],
+    spec('second_key') === 'Sim' && ['i-key', '2.ª chave'],
+    car.negotiable && ['i-tag', 'Preço negociável'],
+    car.vatDeductible && ['i-tag', 'IVA dedutível'],
+  ].filter(Boolean);
+  const GROUPS = { basic_information: 'Informações básicas', technical_specs: 'Especificações técnicas', condition_history: 'Estado e histórico', financial_information: 'Financiamento', ev_specs: 'Elétrico e híbrido' };
+  const groups = [];
+  for (const s of car.specs) {
+    const g = GROUPS[s.group] || 'Características';
+    let entry = groups.find((x) => x.name === g);
+    if (!entry) groups.push((entry = { name: g, items: [] }));
+    entry.items.push(s);
+  }
+  // Agrupa os itens de lista consecutivos da descrição
+  const desc = [];
+  car.description.forEach((b) => {
+    if (b.type === 'li') { const last = desc[desc.length - 1]; if (last && last.type === 'ul') last.items.push(b.text); else desc.push({ type: 'ul', items: [b.text] }); }
+    else desc.push(b);
+  });
+  const quick = [['Segmento', car.body], ['Cor', car.color], ['Portas', car.doors], ['Lugares', car.seats], ['Tração', car.traction], ['Emissões CO₂', spec('co2_emissions')], ['Inspeção válida até', spec('inspection_valid_until')], ['Origem', spec('origin')]].filter(([, v]) => v);
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Car', name: fullTitle, brand: car.make ? { '@type': 'Brand', name: car.make } : undefined,
-    model: car.model || undefined, vehicleModelDate: car.year || undefined, fuelType: car.fuel || undefined,
-    vehicleTransmission: car.gearbox || undefined, color: car.color || undefined, image: car.images.slice(0, 5).map(i => img(i, '1280x960')),
+    '@context': 'https://schema.org', '@type': 'Car', name: full, brand: car.make ? { '@type': 'Brand', name: car.make } : undefined,
+    model: car.model || undefined, vehicleModelDate: car.year || undefined, fuelType: car.fuel || undefined, color: car.color || undefined,
+    vehicleTransmission: car.gearbox || undefined, bodyType: car.body || undefined, image: car.images.slice(0, 6).map((i) => img(i, '1280x960')),
     mileageFromOdometer: car.km != null ? { '@type': 'QuantitativeValue', value: car.km, unitCode: 'KMT' } : undefined,
-    offers: car.price ? { '@type': 'Offer', price: car.price, priceCurrency: car.currency || 'EUR', availability: 'https://schema.org/InStock', url: `${siteUrl}/viaturas/${car.slug}` } : undefined,
+    offers: car.price ? { '@type': 'Offer', price: car.price, priceCurrency: car.currency, availability: 'https://schema.org/InStock', url: link, seller: { '@type': 'AutoDealer', name: stand.name } } : undefined,
   };
 %>
-<%- include('partials/header', { title: fullTitle + (car.year ? ' ' + car.year : ''), description: `${fullTitle}, ${[car.year, car.km != null ? fmtKm(car.km) : null, car.fuel].filter(Boolean).join(', ')} — ${fmtPrice(car.price)}. Disponível no stand ${stand.name}.`, ogImage: img(car.images[0], '1280x960') }) %>
+<%- include('partials/header', { title: `${full}${car.year ? ' ' + car.year : ''}`, description: `${full}, ${[fmtDate(car), car.km != null ? fmtKm(car.km) : null, car.fuel].filter(Boolean).join(', ')}, por ${fmtPrice(car.price)}. Com garantia, no stand ${stand.name}.`, ogImage: img(car.images[0], '1280x960'), waText: waInfo }) %>
 <script type="application/ld+json"><%- JSON.stringify(jsonLd).replace(/</g, '\\u003c') %></script>
 
-<section class="section car-detail">
-  <div class="container">
-    <nav class="breadcrumbs"><a href="/">Início</a> › <a href="/viaturas">Viaturas</a> › <span><%= name %></span></nav>
-    <div class="car-layout">
-      <div class="car-main">
-        <div class="gallery" data-images='<%= JSON.stringify(car.images.map(i => img(i, "1280x960"))) %>'>
-          <div class="gallery-main">
-            <img src="<%= img(car.images[0], '1280x960') %>" alt="<%= fullTitle %>" id="gallery-main-img">
-            <% if (car.images.length > 1) { %>
-              <button class="gal-nav prev" aria-label="Anterior">‹</button>
-              <button class="gal-nav next" aria-label="Seguinte">›</button>
-              <span class="gal-count"><span id="gal-idx">1</span>/<%= car.images.length %></span>
-            <% } %>
-          </div>
-          <% if (car.images.length > 1) { %>
-          <div class="gallery-thumbs">
-            <% car.images.forEach((im, i) => { %>
-              <button data-idx="<%= i %>" class="<%= i === 0 ? 'active' : '' %>"><img src="<%= img(im, '200x150') %>" alt="" loading="lazy"></button>
-            <% }) %>
-          </div>
-          <% } %>
-        </div>
+<div class="wrap car-page">
+  <nav class="crumbs" aria-label="Localização"><a href="/">Início</a><span aria-hidden="true">/</span><a href="/stock/">Stock</a><span aria-hidden="true">/</span><span><%= name %></span></nav>
 
-        <div class="highlights">
-          <% highlights.forEach(([l, v]) => { %><div><span><%= l %></span><strong><%= v %></strong></div><% }) %>
-        </div>
-
-        <% if (car.description) { %>
-        <div class="block"><h2>Descrição</h2><div class="description"><%= car.description %></div></div>
-        <% } %>
-
-        <% if (car.specs.length) { %>
-        <div class="block"><h2>Características</h2>
-          <dl class="specs"><% car.specs.forEach(s => { %><div><dt><%= s.label || s.key %></dt><dd><%= s.value %></dd></div><% }) %></dl>
-        </div>
-        <% } %>
-
-        <% if (car.equipment.length) { %>
-        <div class="block"><h2>Equipamento</h2>
-          <% car.equipment.forEach(g => { %>
-            <h3 class="equip-group"><%= g.group %></h3>
-            <ul class="equipment"><% g.items.forEach(it => { %><li><%= it %></li><% }) %></ul>
-          <% }) %>
-        </div>
+  <div class="car-top">
+    <div class="gallery" data-images="<%= JSON.stringify(car.images.map((i) => img(i, '1280x960'))) %>">
+      <div class="gallery-main" role="button" tabindex="0" aria-label="Ver fotografias em ecrã inteiro">
+        <img id="gal-img" src="<%= img(car.images[0], '1280x960') %>" alt="<%= full %>" width="1280" height="960">
+        <% if (car.images.length > 1) { %>
+          <button class="gal-btn prev" type="button" aria-label="Fotografia anterior"><svg><use href="#i-left"/></svg></button>
+          <button class="gal-btn next" type="button" aria-label="Fotografia seguinte"><svg><use href="#i-right"/></svg></button>
+          <span class="chip gal-count num"><svg><use href="#i-camera"/></svg><span><span id="gal-idx">1</span>/<%= car.images.length %></span></span>
         <% } %>
       </div>
-
-      <aside class="car-side">
-        <div class="price-box">
-          <h1><%= name %></h1>
-          <p class="car-version"><%= car.version || car.title %></p>
-          <div class="big-price"><%= fmtPrice(car.price) %></div>
-          <% if (car.vatDeductible) { %><span class="tag">IVA dedutível</span><% } %>
-          <% if (car.negotiable) { %><span class="tag">Negociável</span><% } %>
-          <div class="contact-actions">
-            <% if (wa) { %><a class="btn btn-wa btn-block" href="<%= wa %>" target="_blank" rel="noopener">WhatsApp</a><% } %>
-            <% if (stand.phone) { %><a class="btn btn-block" href="tel:<%= stand.phone.replace(/\s/g, '') %>">Ligar <%= stand.phone %></a><% } %>
-            <% if (stand.email) { %><a class="btn btn-outline btn-block" href="mailto:<%= stand.email %>?subject=<%= encodeURIComponent('Pedido de informação: ' + fullTitle) %>&body=<%= encodeURIComponent(msg) %>">Pedir informações</a><% } %>
-          </div>
-          <ul class="perks"><li>✔ Garantia</li><li>✔ Financiamento</li><li>✔ Aceitamos retoma</li></ul>
-        </div>
-      </aside>
+      <% if (car.images.length > 1) { %>
+      <div class="thumbs">
+        <% car.images.forEach((im, i) => { %><button type="button" data-idx="<%= i %>" aria-label="Fotografia <%= i + 1 %>" <%- i === 0 ? 'aria-current="true"' : '' %>><img src="<%= img(im, '200x150') %>" alt="" loading="lazy" width="200" height="150"></button><% }) %>
+      </div>
+      <% } %>
     </div>
 
-    <% if (related.length) { %>
-    <div class="block related">
-      <h2>Também pode gostar</h2>
-      <div class="car-grid"><% related.forEach(c => { %><%- include('partials/card', { c }) %><% }) %></div>
-    </div>
-    <% } %>
+    <aside class="buy">
+      <div>
+        <h1><%= name %></h1>
+        <p class="version"><%= carSub(car) %></p>
+      </div>
+      <% if (chips.length) { %><div class="chips"><% chips.forEach(([ic, l]) => { %><span class="chip"><svg><use href="#<%= ic %>"/></svg><%= l %></span><% }) %></div><% } %>
+      <div class="price-tag">
+        <% if (car.oldPrice) { %><span class="price-old num"><%= fmtPrice(car.oldPrice) %></span><% } %>
+        <span class="price"><%= fmtPrice(car.price) %></span>
+      </div>
+      <dl class="keyspecs"><% keyspecs.forEach(([l, v]) => { %><div><dt><%= l %></dt><dd><%= v %></dd></div><% }) %></dl>
+      <div class="buy-actions">
+        <a class="btn btn-wa btn-block" href="<%= waLink(waInfo) %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Pedir informações</a>
+        <a class="btn btn-ghost btn-block" href="<%= waLink(waVisit) %>" target="_blank" rel="noopener"><svg><use href="#i-calendar"/></svg>Agendar visita</a>
+        <p class="buy-phone">ou liga <a class="num" href="<%= telHref(stand.phone) %>"><%= stand.phone %></a></p>
+      </div>
+      <div class="perks">
+        <span><svg><use href="#i-card"/></svg>Financiamento</span>
+        <span><svg><use href="#i-swap"/></svg>Aceitamos retoma</span>
+        <span><svg><use href="#i-wrench"/></svg>Revisão incluída</span>
+        <span><svg><use href="#i-truck"/></svg>Entrega no continente</span>
+      </div>
+    </aside>
   </div>
-</section>
-<div class="lightbox" hidden><button class="lb-close" aria-label="Fechar">×</button><button class="gal-nav prev" aria-label="Anterior">‹</button><img alt=""><button class="gal-nav next" aria-label="Seguinte">›</button></div>
-<%- include('partials/footer') %>
+
+  <div class="car-sections">
+    <div>
+      <% if (desc.length) { %>
+      <section class="panel">
+        <h2>Descrição</h2>
+        <div class="desc">
+          <% desc.forEach((b, i) => { if (b.type === 'ul') { %><ul><% b.items.forEach(t => { %><li><%= t %></li><% }) %></ul><% } else { %><p class="<%= b.bold || i === 0 ? 'lead-p' : '' %>"><%= b.text %></p><% } }) %>
+        </div>
+      </section>
+      <% } %>
+
+      <% if (groups.length) { %>
+      <section class="panel">
+        <h2>Características</h2>
+        <div class="spec-groups">
+          <% groups.forEach(g => { %>
+          <div class="spec-group"><h3><%= g.name %></h3>
+            <dl class="spec-table"><% g.items.forEach(s => { %><div><dt><%= s.label || s.key %></dt><dd><%= s.value %></dd></div><% }) %></dl>
+          </div>
+          <% }) %>
+        </div>
+      </section>
+      <% } %>
+
+      <% if (car.equipment.length) { %>
+      <section class="panel">
+        <h2>Equipamento</h2>
+        <div class="equip">
+          <% car.equipment.forEach((g, i) => { %>
+          <details <%= i === 0 ? 'open' : '' %>><summary><%= g.group %><span class="count num"><%= g.items.length %></span><svg><use href="#i-down"/></svg></summary>
+            <ul><% g.items.forEach(it => { %><li><svg><use href="#i-check"/></svg><%= it %></li><% }) %></ul>
+          </details>
+          <% }) %>
+        </div>
+      </section>
+      <% } %>
+    </div>
+
+    <aside class="side-card on-dark">
+      <h3>Ficha rápida</h3>
+      <dl>
+        <% quick.forEach(([l, v]) => { %><div><dt><%= l %></dt><dd><%= v %></dd></div><% }) %>
+        <div><dt>Referência</dt><dd class="num"><%= car.id %></dd></div>
+      </dl>
+      <p>Queres ver este carro ao vivo? Atendemos por marcação, de segunda a sábado.</p>
+      <a class="btn btn-light" href="<%= waLink(waVisit) %>" target="_blank" rel="noopener">Marcar visita<svg><use href="#i-arrow"/></svg></a>
+    </aside>
+  </div>
+
+  <% if (related.length) { %>
+  <section class="section" style="padding-bottom:0">
+    <div class="section-head"><div><p class="eyebrow">Também te pode interessar</p><h2 class="section-title display">Viaturas semelhantes.</h2></div><a href="/stock/" class="link-arrow">Ver todo o stock<svg><use href="#i-arrow"/></svg></a></div>
+    <div class="car-grid"><% related.forEach(c => { %><%- include('partials/card', { c }) %><% }) %></div>
+  </section>
+  <% } %>
+</div>
+
+<div class="lightbox" hidden role="dialog" aria-modal="true" aria-label="Fotografias">
+  <button class="gal-btn lb-close" type="button" aria-label="Fechar"><svg><use href="#i-x"/></svg></button>
+  <button class="gal-btn prev" type="button" aria-label="Fotografia anterior"><svg><use href="#i-left"/></svg></button>
+  <img alt="<%= full %>">
+  <button class="gal-btn next" type="button" aria-label="Fotografia seguinte"><svg><use href="#i-right"/></svg></button>
+  <span class="lb-count"></span>
+</div>
+<%- include('partials/footer', { waText: waInfo }) %>

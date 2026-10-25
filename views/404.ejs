@@ -1,6 +1,8 @@
-<%- include('partials/header', { title: 'Página não encontrada' }) %>
-<section class="section"><div class="container narrow empty">
-  <h1>Página não encontrada</h1>
-  <p>Esta viatura pode já ter sido vendida. Veja as <a href="/viaturas">viaturas disponíveis</a>.</p>
-</div></section>
+<%- include('partials/header', { title: sold ? 'Viatura vendida' : 'Página não encontrada' }) %>
+<section class="section"><div class="wrap"><div class="empty-state">
+  <p class="eyebrow"><%= sold ? 'Já não está disponível' : 'Erro 404' %></p>
+  <h1 class="display section-title"><%= sold ? 'Esta viatura já foi vendida.' : 'Esta página não existe.' %></h1>
+  <p>Vê as viaturas que temos disponíveis neste momento.</p>
+  <a class="btn btn-primary" href="/stock/">Ver stock<svg><use href="#i-arrow"/></svg></a>
+</div></div></section>
 <%- include('partials/footer') %>

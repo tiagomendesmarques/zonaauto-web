@@ -3,6 +3,8 @@ const express = require('express');
 const compression = require('compression');
 const config = require('./config');
 const store = require('./store');
+const mailer = require('./mailer');
+const photos = require('./photos');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -10,23 +12,37 @@ app.set('views', path.join(__dirname, '..', 'views'));
 app.set('trust proxy', true);
 app.disable('x-powered-by');
 app.use(compression());
+app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 app.use('/static', express.static(path.join(__dirname, '..', 'public'), { maxAge: '7d' }));
+app.get('/foto/:id/:size.jpg', photos.handler);
 
 // ---------- helpers disponíveis nas views ----------
 const nf = new Intl.NumberFormat('pt-PT', { useGrouping: 'always' }); // "9 990" e não "9990"
-app.locals.stand = config.stand;
-app.locals.siteUrl = config.siteUrl;
-app.locals.fmtPrice = (v) => (v ? `${nf.format(Math.round(v))} €` : 'Sob consulta');
-app.locals.fmtKm = (v) => (v != null ? `${nf.format(v)} km` : '—');
-app.locals.fmtNum = (v) => (v != null ? nf.format(v) : '—');
-// As imagens do Standvirtual (CDN olxcdn) aceitam o tamanho no URL: ";s=LARGURAxALTURA"
-app.locals.img = (url, size = '640x480') => {
-  if (!url) return '/static/img/sem-foto.svg';
-  return /;s=\d+x\d+/.test(url) ? url.replace(/;s=\d+x\d+/, `;s=${size}`) : url;
+const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+const monthNum = (m) => {
+  const i = MONTHS.indexOf(String(m || '').toLowerCase());
+  return i >= 0 ? String(i + 1).padStart(2, '0') : null;
 };
-app.locals.carName = (c) => [c.make, c.model].filter(Boolean).join(' ') || c.title;
-app.locals.whatsappLink = (text) =>
-  config.stand.whatsapp ? `https://wa.me/${config.stand.whatsapp}?text=${encodeURIComponent(text)}` : null;
+
+Object.assign(app.locals, {
+  stand: config.stand,
+  siteUrl: config.siteUrl,
+  fmtNum: (v) => (v != null ? nf.format(v) : '—'),
+  fmtPrice: (v) => (v ? `${nf.format(Math.round(v))} €` : 'Sob consulta'),
+  fmtKm: (v) => (v != null ? `${nf.format(v)} km` : '—'),
+  // "07/2009" quando há mês de registo
+  fmtDate: (c) => (c.year ? (monthNum(c.month) ? `${monthNum(c.month)}/${c.year}` : String(c.year)) : '—'),
+  // Fotos do Standvirtual servidas pelo nosso domínio, no tamanho pedido
+  img: (url, size = '640x480') => (url ? photos.localPath(url, size) || url : '/static/img/sem-foto.svg'),
+  carName: (c) => [c.make, c.model].filter(Boolean).join(' ') || c.title,
+  // Versão do anúncio, ou segmento e potência quando o anúncio não tem versão
+  carSub: (c) => c.version || [c.body, c.engineCc && (c.engineCc / 1000).toFixed(1), c.power && `${c.power} cv`].filter(Boolean).join(' · ') || c.title,
+  telHref: (p) => `tel:${String(p).replace(/[^\d+]/g, '')}`,
+  waLink: (text) => `https://wa.me/${config.stand.whatsapp}${text ? `?text=${encodeURIComponent(text)}` : ''}`,
+  mapsLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${config.stand.street}, ${config.stand.city}`)}`,
+  mapsEmbed: `https://www.google.com/maps?q=${encodeURIComponent(`${config.stand.street}, ${config.stand.city}`)}&output=embed`,
+  carUrl: (c) => `/stock/${c.slug}/`,
+});
 
 // ---------- filtros da listagem ----------
 const SORTS = {
@@ -36,39 +52,61 @@ const SORTS = {
   'km-asc': (a, b) => (a.km ?? Infinity) - (b.km ?? Infinity),
   'ano-desc': (a, b) => (b.year || 0) - (a.year || 0),
 };
+const SORT_LABELS = [
+  ['recentes', 'Mais recentes'],
+  ['preco-asc', 'Preço mais baixo'],
+  ['preco-desc', 'Preço mais alto'],
+  ['km-asc', 'Menos quilómetros'],
+  ['ano-desc', 'Mais novos'],
+];
 
 function uniqueSorted(cars, field) {
-  return [...new Set(cars.map((c) => c[field]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'pt'));
+  return [...new Set(cars.map((c) => c[field]).filter(Boolean))].sort((a, b) =>
+    typeof a === 'number' ? a - b : String(a).localeCompare(String(b), 'pt')
+  );
 }
 
 function applyFilters(cars, q) {
-  const num = (v) => (v === undefined || v === '' ? null : Number(v));
+  const num = (v) => (v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
   const f = {
     marca: q.marca || '',
     modelo: q.modelo || '',
     combustivel: q.combustivel || '',
     caixa: q.caixa || '',
-    precoMin: num(q.precoMin),
+    segmento: q.segmento || '',
     precoMax: num(q.precoMax),
     anoMin: num(q.anoMin),
     kmMax: num(q.kmMax),
-    q: (q.q || '').trim().toLowerCase(),
+    q: (q.q || '').trim(),
     ordem: SORTS[q.ordem] ? q.ordem : 'recentes',
   };
-  let out = cars.filter(
-    (c) =>
-      (!f.marca || c.make === f.marca) &&
-      (!f.modelo || c.model === f.modelo) &&
-      (!f.combustivel || c.fuel === f.combustivel) &&
-      (!f.caixa || c.gearbox === f.caixa) &&
-      (f.precoMin == null || (c.price || 0) >= f.precoMin) &&
-      (f.precoMax == null || (c.price && c.price <= f.precoMax)) &&
-      (f.anoMin == null || (c.year && c.year >= f.anoMin)) &&
-      (f.kmMax == null || (c.km != null && c.km <= f.kmMax)) &&
-      (!f.q || `${c.title} ${c.make} ${c.model} ${c.version}`.toLowerCase().includes(f.q))
-  );
-  out = [...out].sort(SORTS[f.ordem]);
-  return { filters: f, results: out };
+  const needle = f.q.toLowerCase();
+  const results = cars
+    .filter(
+      (c) =>
+        (!f.marca || c.make === f.marca) &&
+        (!f.modelo || c.model === f.modelo) &&
+        (!f.combustivel || c.fuel === f.combustivel) &&
+        (!f.caixa || c.gearbox === f.caixa) &&
+        (!f.segmento || c.body === f.segmento) &&
+        (f.precoMax == null || (c.price && c.price <= f.precoMax)) &&
+        (f.anoMin == null || (c.year && c.year >= f.anoMin)) &&
+        (f.kmMax == null || (c.km != null && c.km <= f.kmMax)) &&
+        (!needle || `${c.title} ${c.make} ${c.model} ${c.version}`.toLowerCase().includes(needle))
+    )
+    .sort(SORTS[f.ordem]);
+  const active = ['marca', 'modelo', 'combustivel', 'caixa', 'segmento', 'precoMax', 'anoMin', 'kmMax', 'q'].filter(
+    (k) => f[k] !== '' && f[k] != null
+  ).length;
+  return { filters: f, results, active };
+}
+
+// Escalões de preço que fazem sentido para o stock atual
+function priceSteps(cars) {
+  const max = Math.max(0, ...cars.map((c) => c.price || 0));
+  const steps = [5000, 7500, 10000, 12500, 15000, 20000, 25000, 30000, 40000, 50000, 75000, 100000];
+  const out = steps.filter((s) => s < max);
+  return max ? [...out, steps.find((s) => s >= max) || max] : steps.slice(0, 6);
 }
 
 // ---------- rotas ----------
@@ -82,41 +120,90 @@ app.get('/', wrap(async (req, res) => {
     featured: [...cars].sort(SORTS.recentes).slice(0, 8),
     makes: uniqueSorted(cars, 'make'),
     fuels: uniqueSorted(cars, 'fuel'),
+    prices: priceSteps(cars),
   });
 }));
 
-app.get('/viaturas', wrap(async (req, res) => {
+app.get('/stock', wrap(async (req, res) => {
   const cars = await store.getCars();
-  const { filters, results } = applyFilters(cars, req.query);
-  const models = uniqueSorted(filters.marca ? cars.filter((c) => c.make === filters.marca) : cars, 'model');
-  res.render('listing', {
-    page: 'viaturas',
+  const { filters, results, active } = applyFilters(cars, req.query);
+  res.render('stock', {
+    page: 'stock',
     total: cars.length,
     results,
     filters,
+    active,
+    sorts: SORT_LABELS,
     makes: uniqueSorted(cars, 'make'),
-    models,
+    models: uniqueSorted(filters.marca ? cars.filter((c) => c.make === filters.marca) : cars, 'model'),
     fuels: uniqueSorted(cars, 'fuel'),
     gearboxes: uniqueSorted(cars, 'gearbox'),
+    bodies: uniqueSorted(cars, 'body'),
     years: uniqueSorted(cars, 'year').reverse(),
+    prices: priceSteps(cars),
   });
 }));
 
-app.get('/viaturas/:slug', wrap(async (req, res, next) => {
+app.get('/stock/:slug', wrap(async (req, res) => {
   const cars = await store.getCars();
   const id = req.params.slug.split('-').pop();
   const car = cars.find((c) => c.slug === req.params.slug) || cars.find((c) => String(c.id).toLowerCase() === id);
-  if (!car) return next();
-  if (car.slug !== req.params.slug) return res.redirect(301, `/viaturas/${car.slug}`);
+  if (!car) return res.status(404).render('404', { page: '', sold: true });
+  if (car.slug !== req.params.slug) return res.redirect(301, `/stock/${car.slug}/`);
   const related = cars
     .filter((c) => c.id !== car.id)
-    .sort((a, b) => (b.make === car.make) - (a.make === car.make) || Math.abs((a.price || 0) - (car.price || 0)) - Math.abs((b.price || 0) - (car.price || 0)))
-    .slice(0, 4);
-  res.render('car', { page: 'viaturas', car, related });
+    .sort(
+      (a, b) =>
+        (b.body === car.body) - (a.body === car.body) ||
+        Math.abs((a.price || 0) - (car.price || 0)) - Math.abs((b.price || 0) - (car.price || 0))
+    )
+    .slice(0, 3);
+  res.render('car', { page: 'stock', car, related });
 }));
 
-app.get('/contactos', (req, res) => res.render('contact', { page: 'contactos' }));
-app.get('/sobre', (req, res) => res.render('about', { page: 'sobre' }));
+// Endereços antigos do WordPress
+app.get(['/viaturas', '/listings', '/inventory'], (req, res) => res.redirect(301, '/stock/'));
+app.get(['/listings/:slug', '/viaturas/:slug'], wrap(async (req, res) => {
+  const cars = await store.getCars();
+  const words = req.params.slug.split('-');
+  const match = cars.find((c) => c.make && c.model && words.includes(c.make.toLowerCase()) && words.includes(c.model.toLowerCase()));
+  res.redirect(301, match ? `/stock/${match.slug}/` : '/stock/');
+}));
+app.get(['/contact-us', '/contact'], (req, res) => res.redirect(301, '/contactos/'));
+
+app.get('/importacao', (req, res) => res.render('importacao', { page: 'importacao', sent: null, form: {} }));
+app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos', sent: null, form: {} }));
+app.get('/politica-de-privacidade', (req, res) => res.render('privacidade', { page: '' }));
+app.get('/termos-e-condicoes-de-utilizacao', (req, res) => res.render('termos', { page: '' }));
+
+// Formulários
+const FORMS = {
+  contactos: {
+    subject: (f) => `Contacto do site: ${f.nome}`,
+    fields: [['nome', 'Nome'], ['email', 'Email'], ['telemovel', 'Telemóvel'], ['viatura', 'Viatura'], ['mensagem', 'Mensagem']],
+    required: ['nome', 'mensagem'],
+  },
+  importacao: {
+    subject: (f) => `Pedido de importação: ${f.nome}`,
+    fields: [['nome', 'Nome'], ['telemovel', 'Telemóvel'], ['email', 'Email'], ['anuncio', 'Anúncio em vista'], ['prazo', 'Quando quer avançar'], ['detalhes', 'Detalhes']],
+    required: ['nome', 'telemovel'],
+  },
+};
+
+for (const [name, def] of Object.entries(FORMS)) {
+  app.post(`/${name}`, wrap(async (req, res) => {
+    const form = {};
+    for (const [k] of def.fields) form[k] = String(req.body[k] || '').trim().slice(0, 3000);
+    // Campo escondido "website": só os robôs o preenchem
+    if (req.body.website) return res.render(name, { page: name, sent: 'ok', form: {} });
+    const missing = def.required.filter((k) => !form[k]);
+    if (missing.length) return res.status(400).render(name, { page: name, sent: 'missing', form });
+    const lines = def.fields.filter(([k]) => form[k]).map(([k, label]) => `${label}: ${form[k]}`);
+    const ok = await mailer.send({ subject: def.subject(form), text: lines.join('\n'), replyTo: form.email || undefined });
+    // Sem email configurado (ou se falhar), oferece o envio pelo WhatsApp com o texto já escrito.
+    res.render(name, { page: name, sent: ok ? 'ok' : 'whatsapp', waText: lines.join('\n'), form: ok ? {} : form });
+  }));
+}
 
 app.get('/api/viaturas', wrap(async (req, res) => {
   res.json({ updatedAt: store.state.updatedAt, cars: await store.getCars() });
@@ -124,7 +211,7 @@ app.get('/api/viaturas', wrap(async (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const cars = await store.getCars();
-  const urls = ['/', '/viaturas', '/sobre', '/contactos', ...cars.map((c) => `/viaturas/${c.slug}`)];
+  const urls = ['/', '/stock/', '/importacao/', '/contactos/', ...cars.map((c) => `/stock/${c.slug}/`)];
   res.type('application/xml').send(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
       .map((u) => `  <url><loc>${config.siteUrl}${u}</loc></url>`)
@@ -148,12 +235,16 @@ app.all('/tarefas/sincronizar', wrap(async (req, res) => {
   res.json({ ok: !store.state.lastError, cars: store.state.cars.length, error: store.state.lastError });
 }));
 
-app.use((req, res) => res.status(404).render('404', { page: '' }));
+app.use((req, res) => res.status(404).render('404', { page: '', sold: false }));
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).send('Erro interno');
 });
 
-store.init().then(() => {
-  app.listen(config.port, () => console.log(`Zona Auto a correr em http://localhost:${config.port}`));
-});
+if (require.main === module) {
+  store.init().then(() => {
+    app.listen(config.port, () => console.log(`Zona Auto a correr em http://localhost:${config.port}`));
+  });
+}
+
+module.exports = app;

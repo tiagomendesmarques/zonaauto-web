@@ -1,56 +1,135 @@
 <%- include('partials/header') %>
-<section class="hero">
-  <div class="container hero-inner">
-    <h1><%= stand.slogan %></h1>
-    <p class="hero-sub"><%= cars.length ? cars.length + ' viaturas disponíveis para entrega imediata' : 'Viaturas selecionadas e revistas' %></p>
-    <form class="search-box" action="/viaturas" method="get">
-      <select name="marca" aria-label="Marca">
-        <option value="">Todas as marcas</option>
-        <% makes.forEach(m => { %><option><%= m %></option><% }) %>
-      </select>
-      <select name="combustivel" aria-label="Combustível">
-        <option value="">Combustível</option>
-        <% fuels.forEach(f => { %><option><%= f %></option><% }) %>
-      </select>
-      <select name="precoMax" aria-label="Preço máximo">
-        <option value="">Preço até</option>
-        <% [5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000].forEach(p => { %><option value="<%= p %>"><%= fmtPrice(p) %></option><% }) %>
-      </select>
-      <button class="btn" type="submit">Pesquisar</button>
-    </form>
+<section class="hero on-dark">
+  <div class="hero-bg"><img src="/static/img/hero-home.webp" alt="" fetchpriority="high"></div>
+  <div class="wrap">
+    <div class="hero-inner">
+      <p class="eyebrow"><span style="display:inline-flex;align-items:center;gap:10px"><span class="live-dot"></span><%= cars.length %> viaturas em stock, atualizado diariamente</span></p>
+      <h1 class="display">Encontra connosco o teu <em>próximo carro.</em></h1>
+      <p class="lead">Encontra, compara e escolhe o carro ideal com total confiança. Simples, rápido e sem complicações.</p>
+      <div class="hero-meta">
+        <span><svg><use href="#i-shield"/></svg>Garantia incluída</span>
+        <span><svg><use href="#i-card"/></svg>Financiamento à medida</span>
+        <span><svg><use href="#i-truck"/></svg>Entregas em todo o continente</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap search-dock">
+  <form class="search" action="/stock/" method="get" role="search" aria-label="Pesquisar viaturas">
+    <div class="field">
+      <label for="s-marca">Marca</label>
+      <select id="s-marca" name="marca"><option value="">Todas as marcas</option><% makes.forEach(m => { %><option><%= m %></option><% }) %></select>
+    </div>
+    <div class="field">
+      <label for="s-comb">Combustível</label>
+      <select id="s-comb" name="combustivel"><option value="">Todos</option><% fuels.forEach(f => { %><option><%= f %></option><% }) %></select>
+    </div>
+    <div class="field">
+      <label for="s-preco">Preço até</label>
+      <select id="s-preco" name="precoMax"><option value="">Sem limite</option><% prices.forEach(p => { %><option value="<%= p %>"><%= fmtPrice(p) %></option><% }) %></select>
+    </div>
+    <button class="btn btn-primary" type="submit">Ver viaturas<svg><use href="#i-arrow"/></svg></button>
+  </form>
+</div>
+
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Em stock</p>
+        <h2 class="section-title display">Viaturas selecionadas.</h2>
+      </div>
+      <a href="/stock/" class="link-arrow">Ver todo o stock<svg><use href="#i-arrow"/></svg></a>
+    </div>
+    <% if (featured.length) { %>
+      <div class="car-grid"><% featured.forEach(c => { %><%- include('partials/card', { c }) %><% }) %></div>
+    <% } else { %>
+      <div class="empty-state"><h3>O stock está a ser atualizado</h3><p>Volta dentro de alguns minutos ou fala connosco pelo <a class="link-arrow" href="<%= waLink() %>">WhatsApp</a>.</p></div>
+    <% } %>
+  </div>
+</section>
+
+<section class="section" style="background:#fff">
+  <div class="wrap process">
+    <div>
+      <p class="eyebrow">Como funciona</p>
+      <h2 class="section-title display" style="margin-top:12px">Comprar carro, sem complicações.</h2>
+      <p class="lead" style="margin-top:16px">Tornamos todo o processo rápido e claro. Desde a escolha do veículo até ao financiamento, estamos contigo em cada passo.</p>
+      <div class="process-steps">
+        <div class="step"><div><h3>Escolhe a tua viatura</h3><p>Explora o stock aqui no site ou visita-nos no stand para veres o carro ao vivo.</p></div></div>
+        <div class="step"><div><h3>Pede a simulação de financiamento</h3><p>Tratamos de soluções à tua medida, com resposta rápida e condições transparentes.</p></div></div>
+        <div class="step"><div><h3>Levanta ou recebe em casa</h3><p>Entregamos com revisão feita e garantia, em todo o Portugal continental.</p></div></div>
+      </div>
+    </div>
+    <div class="collage">
+      <img src="/static/img/processo-1.webp" alt="Viaturas em exposição no stand" loading="lazy">
+      <img src="/static/img/processo-2.webp" alt="Consultor a explicar condições de compra a um casal" loading="lazy">
+      <img src="/static/img/processo-3.webp" alt="Cliente sentada ao volante do novo carro" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="section dark on-dark">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">O que fazemos</p>
+        <h2 class="section-title display">Tudo o que precisas, num só sítio.</h2>
+      </div>
+      <p class="lead" style="max-width:44ch">Cada viatura sai do stand revista, com garantia e com a papelada tratada.</p>
+    </div>
+    <div class="services">
+      <article class="service">
+        <div class="service-media"><img src="/static/img/processo-2.webp" alt="" loading="lazy"></div>
+        <div class="service-body"><span class="service-icon"><svg><use href="#i-card"/></svg></span><h3>Financiamento automóvel</h3><p>Soluções à tua medida, rápidas e transparentes, para facilitar a compra do teu próximo carro.</p></div>
+      </article>
+      <article class="service">
+        <div class="service-media"><img src="/static/img/servico-revisao.webp" alt="" loading="lazy"></div>
+        <div class="service-body"><span class="service-icon"><svg><use href="#i-wrench"/></svg></span><h3>Revisão incluída</h3><p>Todos os carros são entregues com revisão e manutenção feitas, para conduzires com confiança desde o primeiro dia.</p></div>
+      </article>
+      <article class="service">
+        <div class="service-media"><img src="/static/img/servico-retoma.webp" alt="" loading="lazy"></div>
+        <div class="service-body"><span class="service-icon"><svg><use href="#i-swap"/></svg></span><h3>Retoma do teu veículo</h3><p>Aceitamos o teu carro como retoma, com avaliação justa e sem complicações.</p></div>
+      </article>
+      <article class="service">
+        <div class="service-media"><img src="/static/img/servico-garantia.webp" alt="" loading="lazy"></div>
+        <div class="service-body"><span class="service-icon"><svg><use href="#i-shield"/></svg></span><h3>Garantia e proteção</h3><p>Opções de garantia para maior segurança e tranquilidade depois da compra.</p></div>
+      </article>
+    </div>
   </div>
 </section>
 
 <section class="section">
-  <div class="container">
-    <div class="section-head">
-      <h2>Últimas entradas</h2>
-      <a href="/viaturas" class="link-more">Ver todas as viaturas →</a>
-    </div>
-    <% if (featured.length) { %>
-      <div class="car-grid">
-        <% featured.forEach(c => { %><%- include('partials/card', { c }) %><% }) %>
+  <div class="wrap">
+    <div class="band on-dark">
+      <img src="/static/img/hero-importacao.webp" alt="" loading="lazy">
+      <div class="band-inner">
+        <p class="eyebrow">Importação por encomenda</p>
+        <h2 class="display">Não está em stock? Importamos por ti.</h2>
+        <p class="lead">Tratamos de todo o processo, desde a procura até à entrega em Portugal, com total transparência e acompanhamento.</p>
+        <div class="ticks"><span><svg><use href="#i-check"/></svg>Procura na Europa</span><span><svg><use href="#i-check"/></svg>ISV e legalização</span><span><svg><use href="#i-check"/></svg>Matrícula portuguesa</span></div>
+        <div class="band-actions"><a class="btn btn-light" href="/importacao/">Pedir importação<svg><use href="#i-arrow"/></svg></a></div>
       </div>
-    <% } else { %><%- include('partials/empty') %><% } %>
-  </div>
-</section>
-
-<section class="section section-alt">
-  <div class="container features">
-    <div class="feature"><span>✅</span><h3>Viaturas revistas</h3><p>Todas as viaturas são inspecionadas antes da venda.</p></div>
-    <div class="feature"><span>🛡️</span><h3>Garantia</h3><p>Viaturas com garantia, para comprar com tranquilidade.</p></div>
-    <div class="feature"><span>💶</span><h3>Financiamento</h3><p>Soluções de crédito à medida, com resposta rápida.</p></div>
-    <div class="feature"><span>🔁</span><h3>Retoma</h3><p>Avaliamos a sua viatura e aceitamos como parte do pagamento.</p></div>
-  </div>
-</section>
-
-<section class="section cta">
-  <div class="container cta-inner">
-    <div>
-      <h2>Não encontrou o que procura?</h2>
-      <p>Diga-nos que viatura procura e nós encontramos por si.</p>
     </div>
-    <a href="/contactos" class="btn btn-light">Fale connosco</a>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap faq">
+    <div class="faq-aside">
+      <p class="eyebrow">Perguntas frequentes</p>
+      <h2 class="section-title display">Esclarece as tuas dúvidas.</h2>
+      <p class="lead">Sobre o processo de compra, financiamento e garantias. Queremos que decidas com total confiança.</p>
+      <img src="/static/img/faq.webp" alt="Cliente a escolher viatura no stand" loading="lazy">
+    </div>
+    <div class="faq-list">
+      <details open><summary>Disponibilizam financiamento para carros usados?<span class="pm"></span></summary><p>Sim, oferecemos várias soluções de financiamento ajustadas ao teu orçamento, com processos simples e aprovação rápida.</p></details>
+      <details><summary>Posso dar o meu carro como retoma?<span class="pm"></span></summary><p>Sim, aceitamos retomas. Fazemos uma avaliação justa do teu veículo para facilitar a troca por um novo carro.</p></details>
+      <details><summary>Os veículos têm garantia?<span class="pm"></span></summary><p>Sim, os nossos carros incluem garantia para maior segurança e tranquilidade depois da compra.</p></details>
+      <details><summary>Não sou da zona de Lisboa. Posso comprar um carro convosco?<span class="pm"></span></summary><p>Sim. Ajudamos em todo o processo à distância, desde a escolha do veículo até ao esclarecimento de dúvidas. Enviamos fotos, vídeos e toda a informação necessária, e fazemos entregas em todo o Portugal continental.</p></details>
+      <details><summary>Os carros do site são os mesmos do Standvirtual?<span class="pm"></span></summary><p>Sim. O stock deste site é atualizado automaticamente a partir dos nossos anúncios, por isso o que vês aqui está disponível.</p></details>
+    </div>
   </div>
 </section>
 <%- include('partials/footer') %>

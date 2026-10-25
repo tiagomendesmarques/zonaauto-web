@@ -10,7 +10,7 @@ const { scrapeInventory } = require('./scraper');
 const LOCAL_SNAPSHOT = path.join(__dirname, '..', 'data', 'inventory.json');
 const SNAPSHOT_OBJECT = 'inventory.json';
 
-const state = { cars: [], updatedAt: null, lastError: null, lastAttempt: 0, syncing: null };
+const state = { cars: [], stand: null, updatedAt: null, lastError: null, lastAttempt: 0, syncing: null };
 
 let bucket = null;
 function getBucket() {
@@ -30,6 +30,7 @@ async function loadSnapshot() {
     else raw = await fs.readFile(LOCAL_SNAPSHOT);
     const data = JSON.parse(raw.toString());
     state.cars = data.cars || [];
+    state.stand = data.stand || null;
     state.updatedAt = data.updatedAt ? new Date(data.updatedAt) : null;
     console.log(`[store] snapshot carregado: ${state.cars.length} viaturas (${data.updatedAt})`);
   } catch (err) {
@@ -38,7 +39,7 @@ async function loadSnapshot() {
 }
 
 async function saveSnapshot() {
-  const body = JSON.stringify({ updatedAt: state.updatedAt, cars: state.cars });
+  const body = JSON.stringify({ updatedAt: state.updatedAt, stand: state.stand, cars: state.cars });
   try {
     const b = getBucket();
     if (b) await b.file(SNAPSHOT_OBJECT).save(body, { contentType: 'application/json' });
@@ -56,7 +57,7 @@ function sync() {
   state.lastAttempt = Date.now();
   state.syncing = (async () => {
     try {
-      const cars = await scrapeInventory();
+      const { stand, cars } = await scrapeInventory();
       // Proteção: uma queda brusca (>60%) costuma indicar erro de leitura, não vendas.
       // Se o mesmo número se repetir na sincronização seguinte, aceita-se como real.
       if (state.cars.length >= 5 && cars.length < state.cars.length * 0.4 && state.suspectCount !== cars.length) {
@@ -65,6 +66,7 @@ function sync() {
       }
       state.suspectCount = null;
       state.cars = cars;
+      state.stand = stand;
       state.updatedAt = new Date();
       state.lastError = null;
       await saveSnapshot();

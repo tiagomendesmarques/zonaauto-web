@@ -1,17 +1,23 @@
-<a class="car-card" href="/viaturas/<%= c.slug %>">
-  <div class="car-card-img">
-    <img src="<%= img(c.images[0], '640x480') %>" alt="<%= c.title %>" loading="lazy">
-    <% if (c.images.length > 1) { %><span class="photo-count">📷 <%= c.images.length %></span><% } %>
+<a class="car-card" href="<%= carUrl(c) %>">
+  <div class="car-media">
+    <img src="<%= img(c.images[0], '640x480') %>" alt="<%= carName(c) %> <%= c.version || '' %>" loading="lazy" width="640" height="480">
+    <% if (c.warranty) { %><span class="chip badge"><svg><use href="#i-shield"/></svg>Garantia <%= c.warranty.toLowerCase() %></span><% } %>
+    <% if (c.images.length > 1) { %><span class="chip photos"><svg><use href="#i-camera"/></svg><span class="num"><%= c.images.length %></span></span><% } %>
   </div>
-  <div class="car-card-body">
-    <h3><%= carName(c) %></h3>
-    <p class="car-version"><%= c.version || c.title %></p>
-    <ul class="car-meta">
-      <% if (c.year) { %><li><%= c.month ? c.month + '/' : '' %><%= c.year %></li><% } %>
-      <% if (c.km != null) { %><li><%= fmtKm(c.km) %></li><% } %>
-      <% if (c.fuel) { %><li><%= c.fuel %></li><% } %>
-      <% if (c.gearbox) { %><li><%= c.gearbox %></li><% } %>
-    </ul>
-    <div class="car-price"><%= fmtPrice(c.price) %></div>
+  <div class="car-body">
+    <div class="car-title">
+      <h3><%= carName(c) %></h3>
+      <p><%= carSub(c) %></p>
+    </div>
+    <dl class="specline">
+      <div><dt>Registo</dt><dd><%= fmtDate(c) %></dd></div>
+      <div><dt>Quilómetros</dt><dd><%= c.km != null ? fmtKm(c.km) : '—' %></dd></div>
+      <div><dt>Combustível</dt><dd><%= c.fuel || '—' %></dd></div>
+      <div><dt>Caixa</dt><dd><%= c.gearbox || '—' %></dd></div>
+    </dl>
+    <div class="car-foot">
+      <div><% if (c.oldPrice) { %><span class="price-old num"><%= fmtPrice(c.oldPrice) %></span><% } %><span class="price"><%= fmtPrice(c.price) %></span></div>
+      <span class="go" aria-hidden="true"><svg><use href="#i-arrow"/></svg></span>
+    </div>
   </div>
 </a>

@@ -14,6 +14,9 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 ```
 
 - **Um único serviço** Node.js/Express em Cloud Run. Sem base de dados e sem WordPress.
+- A leitura usa a página de inventário do stand (preço, fotos, características) e a página de cada
+  anúncio (descrição, todas as fotos, equipamento). Se a página de um anúncio falhar, a viatura
+  aparece na mesma com os dados do inventário.
 - **Cloud Scheduler** chama `/tarefas/sincronizar` a cada 30 minutos.
 - O inventário fica em memória e é guardado num bucket do Cloud Storage. Assim o site
   arranca de imediato e continua a mostrar as viaturas se o Standvirtual estiver em baixo.
@@ -25,11 +28,15 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 
 | URL | Conteúdo |
 |---|---|
-| `/` | Destaque, pesquisa rápida, últimas entradas, vantagens |
-| `/viaturas` | Todas as viaturas, com filtros (marca, modelo, combustível, caixa, preço, ano, km) e ordenação |
-| `/viaturas/<marca-modelo-id>` | Galeria, preço, destaques, descrição, características, equipamento, WhatsApp/telefone/email |
-| `/sobre`, `/contactos` | Páginas institucionais com mapa |
+| `/` | Destaque, pesquisa rápida, stock, como funciona, serviços, importação, perguntas frequentes |
+| `/stock/` | Todas as viaturas, com filtros (marca, modelo, combustível, caixa, segmento, preço, ano, km) e ordenação |
+| `/stock/<marca-modelo-ano-ref>/` | Galeria, preço, características agrupadas, equipamento, descrição, WhatsApp e telefone |
+| `/importacao/`, `/contactos/` | Formulários (enviados por email via SMTP, ou por WhatsApp se o email não estiver configurado) |
+| `/politica-de-privacidade/`, `/termos-e-condicoes-de-utilizacao/` | Textos legais do site anterior |
+| `/foto/<id>/<tamanho>.jpg` | Fotos do Standvirtual servidas pelo próprio site, com cache |
 | `/sitemap.xml`, `/robots.txt` | SEO (cada viatura tem também dados estruturados schema.org) |
+
+Os endereços antigos do WordPress (`/listings/...`) redirecionam para a viatura correspondente ou para o stock.
 | `/healthz` | Estado: nº de viaturas, última sincronização, último erro |
 | `/api/viaturas` | Inventário em JSON |
 
@@ -38,6 +45,7 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 ```bash
 npm install
 npm run sync     # testa a leitura do Standvirtual e grava data/inventory.json
+# (atrás de um proxy HTTP, prefixar com NODE_USE_ENV_PROXY=1)
 npm start        # http://localhost:8080
 ```
 
@@ -51,7 +59,8 @@ npm start        # http://localhost:8080
 
 ## Personalizar
 
-- Cores: variáveis no topo de `public/css/style.css` (`--brand`, etc.).
-- Logótipo: `public/img/logo.svg` e `public/img/logo-white.svg`.
+- Cores e fontes: variáveis no topo de `public/css/style.css`.
+- Imagens e logótipo: `public/img/`.
+- Dados do stand e email: `env.yaml` (ver `env.example.yaml`).
 - Textos: `views/*.ejs`.
 - Leitura do Standvirtual: `src/scraper.js`.

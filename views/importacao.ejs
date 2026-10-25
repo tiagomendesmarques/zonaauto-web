@@ -1,0 +1,39 @@
+<%- include('partials/header', { title: 'Importação de carros por encomenda', description: 'Importamos o carro que procuras: procura na Europa, transporte, ISV e legalização, até à entrega em Portugal.' }) %>
+<section class="page-head on-dark">
+  <img src="/static/img/hero-importacao.webp" alt="">
+  <div class="wrap">
+    <p class="eyebrow">Importação por encomenda</p>
+    <h1 class="display">Importa o carro que procuras, à tua medida.</h1>
+    <p class="lead">Tratamos de todo o processo, desde a procura até à entrega em Portugal, com total transparência e acompanhamento.</p>
+  </div>
+</section>
+<section class="section" style="padding-top:48px">
+  <div class="wrap">
+    <div class="import-steps">
+      <div><h3>Procura</h3><p>Dizes-nos o que procuras, ou envias um anúncio que já encontraste.</p></div>
+      <div><h3>Verificação e proposta</h3><p>Confirmamos o histórico e o estado do carro e apresentamos o custo total.</p></div>
+      <div><h3>Transporte e legalização</h3><p>Tratamos do transporte, da inspeção, do ISV e da matrícula portuguesa.</p></div>
+      <div><h3>Entrega</h3><p>Recebes o carro pronto a circular, com toda a documentação em dia.</p></div>
+    </div>
+    <div class="form-layout">
+      <form class="form-card" method="post" action="/importacao/">
+        <div><h2>Pedido de importação</h2><p class="lead" style="font-size:16px;margin-top:8px">Respondemos com uma proposta sem compromisso.</p></div>
+        <%- include('partials/form-alert') %>
+        <div class="form-grid">
+          <div class="input"><label for="i-nome">Nome *</label><input id="i-nome" name="nome" required autocomplete="name" value="<%= form.nome || '' %>"></div>
+          <div class="input"><label for="i-tel">Telemóvel *</label><input id="i-tel" name="telemovel" type="tel" required autocomplete="tel" placeholder="+351 9…" value="<%= form.telemovel || '' %>"></div>
+          <div class="input full"><label for="i-email">Email</label><input id="i-email" name="email" type="email" autocomplete="email" value="<%= form.email || '' %>"></div>
+          <div class="input full"><label for="i-anuncio">Tens algum anúncio em vista? <small>(opcional)</small></label><input id="i-anuncio" name="anuncio" type="url" placeholder="https://" value="<%= form.anuncio || '' %>"></div>
+          <div class="input full"><label for="i-prazo">Quando queres avançar?</label>
+            <select id="i-prazo" name="prazo"><% ['', 'O mais depressa possível', 'Dentro de 1 mês', 'Dentro de 3 meses', 'Ainda estou a pesquisar'].forEach(o => { %><option value="<%= o %>" <%= form.prazo === o ? 'selected' : '' %>><%= o || 'Seleciona' %></option><% }) %></select></div>
+          <div class="input full"><label for="i-det">Detalhes do pedido</label><textarea id="i-det" name="detalhes" placeholder="Marca, modelo, ano, quilómetros, orçamento, cor, extras…"><%= form.detalhes || '' %></textarea></div>
+          <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+        </div>
+        <button class="btn btn-primary" type="submit" style="justify-self:start">Enviar pedido<svg><use href="#i-arrow"/></svg></button>
+        <p class="form-note">Ao enviar aceitas a nossa <a href="/politica-de-privacidade/">política de privacidade</a>.</p>
+      </form>
+      <%- include('partials/contact-card') %>
+    </div>
+  </div>
+</section>
+<%- include('partials/footer') %>

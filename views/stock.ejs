@@ -1,0 +1,70 @@
+<%- include('partials/header', { title: 'Stock de viaturas', description: `${total} viaturas usadas disponíveis no stand ${stand.name}. Filtra por marca, preço, ano e combustível.` }) %>
+<%
+  const qs = (omit) => {
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(filters)) if (k !== omit && v !== '' && v != null && !(k === 'ordem' && v === 'recentes')) p.set(k, v);
+    const s = p.toString();
+    return '/stock/' + (s ? '?' + s : '');
+  };
+  const chipLabels = { marca: filters.marca, modelo: filters.modelo, combustivel: filters.combustivel, caixa: filters.caixa, segmento: filters.segmento,
+    precoMax: filters.precoMax != null ? 'Até ' + fmtPrice(filters.precoMax) : '', anoMin: filters.anoMin ? 'Desde ' + filters.anoMin : '',
+    kmMax: filters.kmMax != null ? 'Até ' + fmtKm(filters.kmMax) : '', q: filters.q ? '“' + filters.q + '”' : '' };
+%>
+<section class="page-head on-dark">
+  <img src="/static/img/hero-stock.webp" alt="">
+  <div class="wrap">
+    <p class="eyebrow">Stock</p>
+    <h1 class="display">Explora as nossas viaturas.</h1>
+    <p class="lead"><span class="num"><%= total %></span> viaturas selecionadas, revistas e com garantia. Atualizado automaticamente a partir dos nossos anúncios.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:40px">
+  <div class="wrap stock">
+    <form class="filters" id="filters" method="get" action="/stock/">
+      <div class="filters-head"><h2>Filtrar</h2><% if (active) { %><a href="/stock/">Limpar</a><% } %></div>
+      <div class="field"><label for="f-q">Pesquisa</label><input id="f-q" type="search" name="q" value="<%= filters.q %>" placeholder="Ex.: Yaris"></div>
+      <div class="field"><label for="f-marca">Marca</label>
+        <select id="f-marca" name="marca" data-autosubmit><option value="">Todas</option><% makes.forEach(m => { %><option <%= filters.marca === m ? 'selected' : '' %>><%= m %></option><% }) %></select></div>
+      <div class="field"><label for="f-modelo">Modelo</label>
+        <select id="f-modelo" name="modelo" data-autosubmit><option value="">Todos</option><% models.forEach(m => { %><option <%= filters.modelo === m ? 'selected' : '' %>><%= m %></option><% }) %></select></div>
+      <div class="field"><label for="f-comb">Combustível</label>
+        <select id="f-comb" name="combustivel" data-autosubmit><option value="">Todos</option><% fuels.forEach(f => { %><option <%= filters.combustivel === f ? 'selected' : '' %>><%= f %></option><% }) %></select></div>
+      <div class="field"><label for="f-caixa">Caixa</label>
+        <select id="f-caixa" name="caixa" data-autosubmit><option value="">Todas</option><% gearboxes.forEach(g => { %><option <%= filters.caixa === g ? 'selected' : '' %>><%= g %></option><% }) %></select></div>
+      <div class="field"><label for="f-seg">Segmento</label>
+        <select id="f-seg" name="segmento" data-autosubmit><option value="">Todos</option><% bodies.forEach(b => { %><option <%= filters.segmento === b ? 'selected' : '' %>><%= b %></option><% }) %></select></div>
+      <div class="field"><label for="f-preco">Preço até</label>
+        <select id="f-preco" name="precoMax" data-autosubmit><option value="">Sem limite</option><% prices.forEach(p => { %><option value="<%= p %>" <%= filters.precoMax === p ? 'selected' : '' %>><%= fmtPrice(p) %></option><% }) %></select></div>
+      <div class="field"><label for="f-ano">Ano desde</label>
+        <select id="f-ano" name="anoMin" data-autosubmit><option value="">Qualquer</option><% years.forEach(y => { %><option <%= filters.anoMin === y ? 'selected' : '' %>><%= y %></option><% }) %></select></div>
+      <div class="field"><label for="f-km">Quilómetros até</label>
+        <select id="f-km" name="kmMax" data-autosubmit><option value="">Qualquer</option><% [50000, 100000, 150000, 200000].forEach(k => { %><option value="<%= k %>" <%= filters.kmMax === k ? 'selected' : '' %>><%= fmtKm(k) %></option><% }) %></select></div>
+      <input type="hidden" name="ordem" value="<%= filters.ordem %>">
+      <button class="btn btn-primary btn-block" type="submit">Ver resultados</button>
+    </form>
+
+    <div>
+      <div class="results-bar">
+        <button class="btn btn-ghost filters-toggle" type="button" aria-controls="filters" aria-expanded="false"><svg><use href="#i-filter"/></svg>Filtros<% if (active) { %> (<%= active %>)<% } %></button>
+        <p><strong class="num"><%= results.length %></strong> <%= results.length === 1 ? 'viatura' : 'viaturas' %><%= active ? ' com estes filtros' : '' %></p>
+        <label class="sort" for="sort">Ordenar
+          <select id="sort"><% sorts.forEach(([v, l]) => { %><option value="<%= v %>" <%= filters.ordem === v ? 'selected' : '' %>><%= l %></option><% }) %></select>
+        </label>
+      </div>
+      <% if (active) { %>
+      <div class="active-chips">
+        <% Object.entries(chipLabels).filter(([, l]) => l).forEach(([k, l]) => { %><a class="chip" href="<%= qs(k) %>"><%= l %><svg><use href="#i-x"/></svg><span class="sr-only">remover filtro</span></a><% }) %>
+      </div>
+      <% } %>
+      <% if (results.length) { %>
+        <div class="car-grid"><% results.forEach(c => { %><%- include('partials/card', { c }) %><% }) %></div>
+      <% } else if (total) { %>
+        <div class="empty-state"><h3>Nenhuma viatura com estes filtros</h3><p>Experimenta alargar a pesquisa, ou diz-nos o que procuras e nós importamos por ti.</p><div class="band-actions"><a class="btn btn-ghost" href="/stock/">Ver todo o stock</a><a class="btn btn-primary" href="/importacao/">Pedir importação</a></div></div>
+      <% } else { %>
+        <div class="empty-state"><h3>O stock está a ser atualizado</h3><p>Volta dentro de alguns minutos ou fala connosco pelo WhatsApp.</p><a class="btn btn-wa" href="<%= waLink() %>"><svg><use href="#i-wa"/></svg>WhatsApp</a></div>
+      <% } %>
+    </div>
+  </div>
+</section>
+<%- include('partials/footer') %>

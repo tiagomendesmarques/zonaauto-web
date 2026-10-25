@@ -1,0 +1,9 @@
+<aside class="contact-card on-dark">
+  <img src="/static/img/consultor.webp" alt="" loading="lazy">
+  <p class="eyebrow">Fala connosco</p>
+  <h2>Respondemos no próprio dia.</h2>
+  <div class="contact-row"><span class="ic"><svg><use href="#i-wa"/></svg></span><div><small>WhatsApp e telemóvel</small><a class="num" href="<%= telHref(stand.phone) %>"><%= stand.phone %></a></div></div>
+  <div class="contact-row"><span class="ic"><svg><use href="#i-mail"/></svg></span><div><small>Email</small><a href="mailto:<%= stand.email %>"><%= stand.email %></a></div></div>
+  <div class="contact-row"><span class="ic"><svg><use href="#i-pin"/></svg></span><div><small>Stand</small><a href="<%= mapsLink %>" target="_blank" rel="noopener"><%= stand.street %>, <%= stand.city %></a></div></div>
+  <div class="contact-row"><span class="ic"><svg><use href="#i-clock"/></svg></span><div><small>Atendimento por marcação</small><div class="hours"><% for (let i = 0; i < stand.hours.length; i += 2) { %><strong><%= stand.hours[i] %></strong><span class="num"><%= stand.hours[i + 1] %></span><% } %></div></div></div>
+</aside>

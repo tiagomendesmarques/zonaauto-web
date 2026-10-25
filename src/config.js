@@ -1,5 +1,5 @@
-// Configuração do stand. Os valores marcados com TODO têm de ser confirmados
-// com o site atual (zonaauto.pt) — podem também ser definidos por variáveis de ambiente.
+// Configuração do site. Os valores por omissão são os do zonaauto.pt atual;
+// todos podem ser alterados por variáveis de ambiente (ver env.example.yaml).
 const env = process.env;
 
 module.exports = {
@@ -23,16 +23,25 @@ module.exports = {
   // Token para o endpoint /tarefas/sincronizar (Cloud Scheduler)
   syncToken: env.SYNC_TOKEN || '',
 
+  // Envio dos formulários por email (SMTP). Sem isto, os pedidos seguem por WhatsApp.
+  mail: {
+    host: env.SMTP_HOST || '',
+    port: Number(env.SMTP_PORT || 465),
+    user: env.SMTP_USER || '',
+    pass: env.SMTP_PASS || '',
+    to: env.MAIL_TO || env.STAND_EMAIL || 'geral@zonaauto.pt',
+  },
+
   stand: {
     name: env.STAND_NAME || 'Zona Auto',
-    slogan: env.STAND_SLOGAN || 'Automóveis usados com confiança', // TODO confirmar
-    phone: env.STAND_PHONE || '', // TODO
-    whatsapp: env.STAND_WHATSAPP || '', // TODO só dígitos, ex: 351912345678
-    email: env.STAND_EMAIL || '', // TODO
-    address: env.STAND_ADDRESS || '', // TODO
-    mapsEmbedUrl: env.STAND_MAPS_EMBED || '', // TODO
-    hours: (env.STAND_HOURS || '').split('|').filter(Boolean), // TODO ex: "Seg–Sex: 9h–19h|Sáb: 9h–13h"
-    facebook: env.STAND_FACEBOOK || '',
-    instagram: env.STAND_INSTAGRAM || '',
+    tagline: env.STAND_TAGLINE || 'A tua referência no mundo automóvel. Ligamos pessoas a carros com transparência, rapidez e confiança.',
+    phone: env.STAND_PHONE || '+351 912 347 926',
+    whatsapp: env.STAND_WHATSAPP || '351912347926',
+    email: env.STAND_EMAIL || 'geral@zonaauto.pt',
+    street: env.STAND_STREET || 'R. João Ortigão Ramos 30B',
+    city: env.STAND_CITY || '1500-062 Lisboa',
+    hours: (env.STAND_HOURS || 'Segunda a sexta|9h às 19h|Sábado|11h às 17h').split('|'),
+    facebook: env.STAND_FACEBOOK || 'https://www.facebook.com/ZonaAuto',
+    instagram: env.STAND_INSTAGRAM || 'https://www.instagram.com/zonaautopt/',
   },
 };

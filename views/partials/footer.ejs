@@ -1,41 +1,57 @@
 </main>
-<footer class="site-footer">
-  <div class="container footer-grid">
+<footer class="site-footer on-dark">
+  <div class="wrap footer-cta">
     <div>
-      <img src="/static/img/logo-white.svg" alt="<%= stand.name %>" height="36" class="footer-logo">
-      <p><%= stand.slogan %></p>
-      <div class="social">
-        <% if (stand.facebook) { %><a href="<%= stand.facebook %>" target="_blank" rel="noopener">Facebook</a><% } %>
-        <% if (stand.instagram) { %><a href="<%= stand.instagram %>" target="_blank" rel="noopener">Instagram</a><% } %>
+      <p class="eyebrow">Atendimento por marcação</p>
+      <h2 class="display">Marca já o teu test-drive.</h2>
+    </div>
+    <div class="band-actions">
+      <a class="btn btn-wa" href="<%= waLink('Olá! Gostaria de marcar uma visita ao stand.') %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Marcar por WhatsApp</a>
+      <a class="btn btn-outline-light" href="<%= telHref(stand.phone) %>"><svg><use href="#i-phone"/></svg><span class="num"><%= stand.phone %></span></a>
+    </div>
+  </div>
+  <div class="wrap footer-grid">
+    <div class="footer-brand">
+      <img src="/static/img/logo-branco.webp" alt="zonaauto.pt" width="160" height="48" loading="lazy">
+      <p><%= stand.tagline %></p>
+      <div class="socials">
+        <a href="<%= stand.facebook %>" target="_blank" rel="noopener" aria-label="Facebook"><svg><use href="#i-fb"/></svg></a>
+        <a href="<%= stand.instagram %>" target="_blank" rel="noopener" aria-label="Instagram"><svg><use href="#i-ig"/></svg></a>
       </div>
     </div>
     <div>
-      <h4>Navegação</h4>
-      <a href="/viaturas">Viaturas</a><a href="/sobre">Sobre nós</a><a href="/contactos">Contactos</a>
+      <h3>Navegação</h3>
+      <nav aria-label="Rodapé">
+        <a href="/stock/">Stock</a>
+        <a href="/importacao/">Importação</a>
+        <a href="/contactos/">Contactos</a>
+      </nav>
     </div>
     <div>
-      <h4>Contactos</h4>
-      <% if (stand.address) { %><p><%= stand.address %></p><% } %>
-      <% if (stand.phone) { %><p><a href="tel:<%= stand.phone.replace(/\s/g, '') %>"><%= stand.phone %></a></p><% } %>
-      <% if (stand.email) { %><p><a href="mailto:<%= stand.email %>"><%= stand.email %></a></p><% } %>
+      <h3>Contactos</h3>
+      <address>
+        <a href="<%= mapsLink %>" target="_blank" rel="noopener"><%= stand.street %><br><%= stand.city %></a>
+        <a href="<%= telHref(stand.phone) %>" class="num"><%= stand.phone %></a>
+        <a href="mailto:<%= stand.email %>"><%= stand.email %></a>
+      </address>
     </div>
-    <% if (stand.hours.length) { %>
     <div>
-      <h4>Horário</h4>
-      <% stand.hours.forEach(h => { %><p><%= h %></p><% }) %>
+      <h3>Horário</h3>
+      <div class="hours">
+        <% for (let i = 0; i < stand.hours.length; i += 2) { %><span><%= stand.hours[i] %></span><span class="num"><%= stand.hours[i + 1] %></span><% } %>
+      </div>
     </div>
-    <% } %>
   </div>
-  <div class="container footer-bottom">
+  <div class="wrap footer-bottom">
     <span>© <%= new Date().getFullYear() %> <%= stand.name %>. Todos os direitos reservados.</span>
-    <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener">Livro de Reclamações</a>
+    <nav aria-label="Legal">
+      <a href="/termos-e-condicoes-de-utilizacao/">Termos e condições</a>
+      <a href="/politica-de-privacidade/">Política de privacidade</a>
+      <a href="https://www.livroreclamacoes.pt" target="_blank" rel="noopener">Livro de Reclamações</a>
+    </nav>
   </div>
 </footer>
-<% const wa = whatsappLink('Olá! Vi o vosso site e gostaria de mais informações.'); if (wa) { %>
-<a class="wa-float" href="<%= wa %>" target="_blank" rel="noopener" aria-label="WhatsApp">
-  <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.1 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.2z"/></svg>
-</a>
-<% } %>
+<a class="wa-float" href="<%= waLink(typeof waText !== 'undefined' && waText ? waText : 'Olá! Vi o vosso site e gostaria de mais informações.') %>" target="_blank" rel="noopener" aria-label="Falar connosco por WhatsApp"><svg><use href="#i-wa"/></svg></a>
 <script src="/static/js/app.js" defer></script>
 </body>
 </html>
