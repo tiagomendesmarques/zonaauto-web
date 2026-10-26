@@ -1,3 +1,27 @@
+// Medição de contactos para o Google Tag Manager (e daí para o Meta Pixel).
+// Todos os botões de WhatsApp enviam o evento "whatsapp_click", seja qual for o texto do botão:
+//   contacto_local  onde foi o clique (botao_flutuante, viatura_informacoes, formulario_importacao, …)
+//   viatura, valor  na página de uma viatura: nome e preço
+// Os cliques no telefone enviam "telefone_click".
+window.dataLayer = window.dataLayer || [];
+const contactEvent = (event, local) => {
+  const data = { event, contacto_local: local };
+  const { viatura, valor } = document.body.dataset;
+  if (viatura) data.viatura = viatura;
+  if (valor) { data.valor = Number(valor); data.moeda = 'EUR'; }
+  window.dataLayer.push(data);
+};
+document.addEventListener('click', (e) => {
+  const wa = e.target.closest('a[href*="wa.me/"]');
+  if (wa) return contactEvent('whatsapp_click', wa.dataset.wa || 'outro');
+  const tel = e.target.closest('a[href^="tel:"]');
+  if (tel) contactEvent('telefone_click', tel.closest('header') ? 'cabecalho' : tel.closest('footer') ? 'rodape' : 'pagina');
+});
+// Os formulários de contacto e importação abrem o WhatsApp ao enviar
+document.addEventListener('submit', (e) => {
+  if (e.target.dataset.wa) contactEvent('whatsapp_click', e.target.dataset.wa);
+});
+
 // Menu móvel
 const header = document.querySelector('.site-header');
 const navToggle = document.querySelector('.nav-toggle');

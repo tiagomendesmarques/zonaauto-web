@@ -45,7 +45,7 @@
     <% if (featured.length) { %>
       <div class="car-grid"><% featured.forEach(c => { %><%- include('partials/card', { c }) %><% }) %></div>
     <% } else { %>
-      <div class="empty-state"><h3>O stock está a ser atualizado</h3><p>Volta dentro de alguns minutos ou fala connosco pelo <a class="link-arrow" href="<%= waLink() %>">WhatsApp</a>.</p></div>
+      <div class="empty-state"><h3>O stock está a ser atualizado</h3><p>Volta dentro de alguns minutos ou fala connosco pelo <a class="link-arrow" data-wa="stock_vazio" href="<%= waLink() %>">WhatsApp</a>.</p></div>
     <% } %>
   </div>
 </section>

@@ -25,6 +25,7 @@ const monthNum = (m) => {
 
 Object.assign(app.locals, {
   stand: config.stand,
+  gtmId: config.gtmId,
   siteUrl: config.siteUrl,
   fmtNum: (v) => (v != null ? nf.format(v) : '—'),
   fmtPrice: (v) => (v ? `${nf.format(Math.round(v))} €` : 'Sob consulta'),

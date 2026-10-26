@@ -77,6 +77,18 @@ copiar os registos DNS indicados para o fornecedor do domínio.
 Se uma publicação falhar, o Cloud Run continua a servir a versão anterior. Para voltar atrás:
 Cloud Run → `zonaauto` → *Revisões* → enviar o tráfego para a revisão anterior.
 
+## Medição (Google Tag Manager / Meta)
+
+O site carrega o GTM `GTM-NNQ8RX77` (variável `GTM_ID`) e envia para o `dataLayer`:
+
+| Evento | Quando | Parâmetros |
+|---|---|---|
+| `whatsapp_click` | Qualquer botão de WhatsApp, incluindo os formulários | `contacto_local`, e na página de uma viatura `viatura`, `valor`, `moeda` |
+| `telefone_click` | Clique num número de telefone | os mesmos |
+
+`contacto_local`: `botao_flutuante`, `rodape`, `viatura_informacoes`, `viatura_agendar_visita`,
+`viatura_marcar_visita`, `formulario_contactos`, `formulario_importacao`, `stock_vazio`, `cabecalho`, `pagina`.
+
 ## Personalizar
 
 - Cores e fontes: variáveis no topo de `public/css/style.css`.

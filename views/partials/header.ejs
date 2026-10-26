@@ -9,6 +9,7 @@
   <meta property="og:type" content="website">
   <meta property="og:image" content="<%= typeof ogImage !== 'undefined' ? ogImage : siteUrl + '/static/img/hero-home.webp' %>">
   <meta name="theme-color" content="#0e001e">
+  <% if (gtmId) { %><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','<%= gtmId %>');</script><% } %>
   <link rel="icon" href="/static/img/favicon.png" sizes="32x32">
   <link rel="apple-touch-icon" href="/static/img/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +17,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,100..125,400..900;1,100..125,400..900&family=Figtree:wght@400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body>
+<body<% if (typeof viatura !== 'undefined' && viatura) { %> data-viatura="<%= viatura.nome %>" data-valor="<%= viatura.valor || '' %>"<% } %>>
+<% if (gtmId) { %><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<%= gtmId %>" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript><% } %>
 <%- include('icons') %>
 <header class="site-header">
   <div class="wrap header-inner">

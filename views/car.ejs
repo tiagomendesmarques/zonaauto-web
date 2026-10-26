@@ -40,7 +40,7 @@
     offers: car.price ? { '@type': 'Offer', price: car.price, priceCurrency: car.currency, availability: 'https://schema.org/InStock', url: link, seller: { '@type': 'AutoDealer', name: stand.name } } : undefined,
   };
 %>
-<%- include('partials/header', { title: `${full}${car.year ? ' ' + car.year : ''}`, description: `${full}, ${[fmtDate(car), car.km != null ? fmtKm(car.km) : null, car.fuel].filter(Boolean).join(', ')}, por ${fmtPrice(car.price)}. Com garantia, no stand ${stand.name}.`, ogImage: img(car.images[0], '1280x960'), waText: waInfo }) %>
+<%- include('partials/header', { title: `${full}${car.year ? ' ' + car.year : ''}`, description: `${full}, ${[fmtDate(car), car.km != null ? fmtKm(car.km) : null, car.fuel].filter(Boolean).join(', ')}, por ${fmtPrice(car.price)}. Com garantia, no stand ${stand.name}.`, ogImage: img(car.images[0], '1280x960'), waText: waInfo, viatura: { nome: `${full}${car.year ? ' ' + car.year : ''}`, valor: car.price } }) %>
 <script type="application/ld+json"><%- JSON.stringify(jsonLd).replace(/</g, '\\u003c') %></script>
 
 <div class="wrap car-page">
@@ -75,8 +75,8 @@
       </div>
       <dl class="keyspecs"><% keyspecs.forEach(([l, v]) => { %><div><dt><%= l %></dt><dd><%= v %></dd></div><% }) %></dl>
       <div class="buy-actions">
-        <a class="btn btn-wa btn-block" href="<%= waLink(waInfo) %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Pedir informações</a>
-        <a class="btn btn-ghost btn-block" href="<%= waLink(waVisit) %>" target="_blank" rel="noopener"><svg><use href="#i-calendar"/></svg>Agendar visita</a>
+        <a class="btn btn-wa btn-block" data-wa="viatura_informacoes" href="<%= waLink(waInfo) %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Pedir informações</a>
+        <a class="btn btn-ghost btn-block" data-wa="viatura_agendar_visita" href="<%= waLink(waVisit) %>" target="_blank" rel="noopener"><svg><use href="#i-calendar"/></svg>Agendar visita</a>
         <p class="buy-phone">ou liga <a class="num" href="<%= telHref(stand.phone) %>"><%= stand.phone %></a></p>
       </div>
       <div class="perks">
@@ -133,7 +133,7 @@
         <div><dt>Referência</dt><dd class="num"><%= car.id %></dd></div>
       </dl>
       <p>Queres ver este carro ao vivo? Atendemos por marcação, de segunda a sábado.</p>
-      <a class="btn btn-light" href="<%= waLink(waVisit) %>" target="_blank" rel="noopener">Marcar visita<svg><use href="#i-arrow"/></svg></a>
+      <a class="btn btn-light" data-wa="viatura_marcar_visita" href="<%= waLink(waVisit) %>" target="_blank" rel="noopener">Marcar visita<svg><use href="#i-arrow"/></svg></a>
     </aside>
   </div>
 

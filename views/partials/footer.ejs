@@ -6,7 +6,7 @@
       <h2 class="display">Marca já o teu test-drive.</h2>
     </div>
     <div class="band-actions">
-      <a class="btn btn-wa" href="<%= waLink('Olá! Gostaria de marcar uma visita ao stand.') %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Marcar por WhatsApp</a>
+      <a class="btn btn-wa" data-wa="rodape" href="<%= waLink('Olá! Gostaria de marcar uma visita ao stand.') %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Marcar por WhatsApp</a>
       <a class="btn btn-outline-light" href="<%= telHref(stand.phone) %>"><svg><use href="#i-phone"/></svg><span class="num"><%= stand.phone %></span></a>
     </div>
   </div>
@@ -51,7 +51,7 @@
     </nav>
   </div>
 </footer>
-<a class="wa-float" href="<%= waLink(typeof waText !== 'undefined' && waText ? waText : 'Olá! Vi o vosso site e gostaria de mais informações.') %>" target="_blank" rel="noopener" aria-label="Falar connosco por WhatsApp"><svg><use href="#i-wa"/></svg></a>
+<a class="wa-float" data-wa="botao_flutuante" href="<%= waLink(typeof waText !== 'undefined' && waText ? waText : 'Olá! Vi o vosso site e gostaria de mais informações.') %>" target="_blank" rel="noopener" aria-label="Falar connosco por WhatsApp"><svg><use href="#i-wa"/></svg></a>
 <script src="/static/js/app.js" defer></script>
 </body>
 </html>

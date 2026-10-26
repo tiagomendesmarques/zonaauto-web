@@ -22,6 +22,8 @@ module.exports = {
   snapshotBucket: env.SNAPSHOT_BUCKET || '',
   // Token para o endpoint /tarefas/sincronizar (Cloud Scheduler)
   syncToken: env.SYNC_TOKEN || '',
+  // Google Tag Manager (é por aqui que o Meta Pixel recebe as conversões). Vazio desliga.
+  gtmId: env.GTM_ID ?? 'GTM-NNQ8RX77',
 
   stand: {
     name: env.STAND_NAME || 'Zona Auto',
