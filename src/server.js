@@ -26,6 +26,8 @@ const monthNum = (m) => {
 Object.assign(app.locals, {
   stand: config.stand,
   gtmId: config.gtmId,
+  // Muda a cada publicação (o Cloud Run define K_REVISION), para o browser não usar CSS/JS antigos da cache
+  assetVersion: process.env.K_REVISION || Date.now().toString(36),
   siteUrl: config.siteUrl,
   fmtNum: (v) => (v != null ? nf.format(v) : '—'),
   fmtPrice: (v) => (v ? `${nf.format(Math.round(v))} €` : 'Sob consulta'),
