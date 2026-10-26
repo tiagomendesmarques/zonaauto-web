@@ -35,7 +35,7 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 | `/politica-de-privacidade/`, `/termos-e-condicoes-de-utilizacao/` | Textos legais do site anterior |
 | `/foto/<id>/<tamanho>.jpg` | Fotos do Standvirtual servidas pelo próprio site, com cache |
 | `/sitemap.xml`, `/robots.txt` | SEO (cada viatura tem também dados estruturados schema.org) |
-| `/healthz` | Estado: nº de viaturas, última sincronização, último erro |
+| `/estado` | Estado: nº de viaturas, última sincronização, último erro |
 | `/api/viaturas` | Inventário em JSON |
 
 Os endereços antigos do WordPress (`/listings/...`) redirecionam para a viatura correspondente ou para o stock.

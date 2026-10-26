@@ -112,5 +112,5 @@ fi
 
 step "Concluído"
 echo "Site: $URL"
-echo "Estado do stock: $URL/healthz"
+echo "Estado do stock: $URL/estado"
 echo "Para usar zonaauto.pt: Cloud Run > $SERVICE > Domínios personalizados (ou: gcloud beta run domain-mappings create --service $SERVICE --domain zonaauto.pt --region $REGION)"

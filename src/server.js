@@ -218,7 +218,8 @@ app.get('/robots.txt', (req, res) =>
   res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: ${config.siteUrl}/sitemap.xml\n`)
 );
 
-app.get('/healthz', (req, res) =>
+// /healthz não funciona no Cloud Run (endereços acabados em "z" são reservados)
+app.get(['/estado', '/healthz'], (req, res) =>
   res.json({ ok: true, cars: store.state.cars.length, updatedAt: store.state.updatedAt, lastError: store.state.lastError })
 );
 

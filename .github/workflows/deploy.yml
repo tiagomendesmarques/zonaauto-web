@@ -40,4 +40,4 @@ jobs:
       - name: Verificar
         run: |
           URL=$(gcloud run services describe "${{ vars.GCP_SERVICE }}" --project "${{ vars.GCP_PROJECT_ID }}" --region "${{ vars.GCP_REGION }}" --format='value(status.url)')
-          curl -fsS "$URL/healthz"
+          curl -fsS "$URL/estado"
