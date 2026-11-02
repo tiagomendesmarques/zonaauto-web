@@ -172,10 +172,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .service-icon svg { width: 20px; height: 20px; }
 
 /* ---------- banda de importação ---------- */
-.band { position: relative; overflow: hidden; isolation: isolate; border-radius: var(--r-lg); color: #fff; background: var(--ink); }
-.band > img { position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%; object-fit: cover; }
-.band::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(14, 0, 30, .96) 0%, rgba(14, 0, 30, .9) 45%, rgba(14, 0, 30, .35) 100%); }
-.band-inner { display: grid; gap: 18px; max-width: 680px; padding: clamp(36px, 6vw, 72px); }
+.band { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); overflow: hidden; border-radius: var(--r-lg); color: #fff; background: var(--ink); }
+.band-inner { display: grid; gap: 18px; align-content: center; padding: clamp(36px, 6vw, 72px); }
+/* Foto ao lado do texto, sem nada por cima; só uma sombra na junção com o painel escuro */
+.band-photo { position: relative; min-height: 320px; }
+.band-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.band-photo::before { content: ""; position: absolute; inset: 0 auto 0 0; z-index: 1; width: 90px; background: linear-gradient(90deg, var(--ink), transparent); }
+@media (max-width: 760px) {
+  .band { grid-template-columns: minmax(0, 1fr); }
+  .band-photo { order: -1; min-height: 200px; }
+  .band-photo::before { inset: auto 0 0 0; width: auto; height: 70px; background: linear-gradient(0deg, var(--ink), transparent); }
+}
 .band h2 { font-size: clamp(28px, 3.4vw, 42px); text-wrap: pretty; }
 .band-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
 .ticks { display: flex; flex-wrap: wrap; gap: 8px 20px; color: rgba(255, 255, 255, .8); font-size: 15px; }
