@@ -92,7 +92,13 @@ apiRouter.use((err, req, res, next) => {
 const pages = express.Router();
 
 async function renderIndex(req, res, next, page) {
-  const all = await db.listPublished();
+  let all;
+  try {
+    all = await db.listPublished();
+  } catch (err) {
+    console.error(`[blog] ${err.message}`);
+    return next(); // sem base de dados, o blog não existe (404)
+  }
   const totalPages = Math.max(1, Math.ceil(all.length / PER_PAGE));
   if (page > totalPages) return next();
   const posts = all.slice((page - 1) * PER_PAGE, page * PER_PAGE);
@@ -109,7 +115,13 @@ pages.get('/blog/page/:n', wrap((req, res, next) => {
 }));
 
 pages.get('/blog/:slug', wrap(async (req, res, next) => {
-  const post = await db.getBySlug(req.params.slug);
+  let post;
+  try {
+    post = await db.getBySlug(req.params.slug);
+  } catch (err) {
+    console.error(`[blog] ${err.message}`);
+    return next();
+  }
   if (!post || post.status !== 'published') return next(); // rascunhos não são públicos
   const featured = postImage(post, 1600);
   const related = (await db.listPublished()).filter((p) => p.id !== post.id).slice(0, 3);

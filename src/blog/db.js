@@ -29,7 +29,28 @@ function fromDoc(snap) {
   return data;
 }
 
-const cache = { meta: null, metaAt: 0, full: new Map(), redirects: null, redirectsAt: 0 };
+const cache = { meta: null, metaAt: 0, full: new Map(), redirects: null, redirectsAt: 0, failedAt: 0, failure: null };
+
+// Depois de uma falha (ex.: base de dados ainda não criada), não volta a tentar durante um minuto,
+// para o resto do site não ficar à espera do Firestore em cada página.
+async function guarded(fn) {
+  if (cache.failure && Date.now() - cache.failedAt < CACHE_MS) throw cache.failure;
+  let timer;
+  try {
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error('O Firestore não respondeu em 5 segundos.')), 5000);
+    });
+    const out = await Promise.race([fn(), timeout]);
+    cache.failure = null;
+    return out;
+  } catch (err) {
+    cache.failure = err;
+    cache.failedAt = Date.now();
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 function invalidate() {
   cache.meta = null;
   cache.full.clear();
@@ -39,7 +60,7 @@ function invalidate() {
 // Todos os artigos, sem o texto (rascunhos incluídos), do mais recente para o mais antigo.
 async function listMeta() {
   if (cache.meta && Date.now() - cache.metaAt < CACHE_MS) return cache.meta;
-  const snap = await posts().select(...META_FIELDS).get();
+  const snap = await guarded(() => posts().select(...META_FIELDS).get());
   cache.meta = snap.docs.map(fromDoc).sort((a, b) => b.id - a.id);
   cache.metaAt = Date.now();
   return cache.meta;
@@ -136,7 +157,7 @@ const redirectId = (from) => encodeURIComponent(from);
 
 async function redirectMap() {
   if (cache.redirects && Date.now() - cache.redirectsAt < CACHE_MS) return cache.redirects;
-  const snap = await firestore().collection('redirects').get();
+  const snap = await guarded(() => firestore().collection('redirects').get());
   cache.redirects = new Map(snap.docs.map((d) => [d.data().fromPath, d.data()]));
   cache.redirectsAt = Date.now();
   return cache.redirects;
