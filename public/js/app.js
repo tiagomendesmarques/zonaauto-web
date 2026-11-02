@@ -11,11 +11,27 @@ const contactEvent = (event, local) => {
   if (valor) { data.valor = Number(valor); data.moeda = 'EUR'; }
   window.dataLayer.push(data);
 };
+// O número de telefone não está na página (há bots a recolhê-lo): aparece "912 347 •••" e só é montado
+// quando a pessoa carrega em "Ver". A partir daí, o link liga.
+function revealPhones() {
+  document.querySelectorAll('.js-phone').forEach((el) => {
+    const full = atob(el.dataset.p).split('').reverse().join('');
+    el.href = `tel:${full.replace(/[^\d+]/g, '')}`;
+    el.querySelector('.js-phone-text').textContent = el.classList.contains('header-phone') ? full.replace(/^\+351\s*/, '') : full;
+    el.dataset.shown = '1';
+    el.title = 'Ligar';
+  });
+}
+
 document.addEventListener('click', (e) => {
-  const wa = e.target.closest('a[href*="wa.me/"]');
+  const wa = e.target.closest('a[href^="/whatsapp/"]');
   if (wa) return contactEvent('whatsapp_click', wa.dataset.wa || 'outro');
-  const tel = e.target.closest('a[href^="tel:"]');
-  if (tel) contactEvent('telefone_click', tel.closest('header') ? 'cabecalho' : tel.closest('footer') ? 'rodape' : 'pagina');
+  const phone = e.target.closest('.js-phone');
+  if (phone && !phone.dataset.shown) {
+    e.preventDefault();
+    revealPhones();
+    contactEvent('telefone_click', phone.closest('header') ? 'cabecalho' : phone.closest('footer') ? 'rodape' : 'pagina');
+  }
 });
 // Os formulários de contacto e importação abrem o WhatsApp ao enviar
 document.addEventListener('submit', (e) => {

@@ -51,8 +51,15 @@ Object.assign(app.locals, {
   carName: (c) => [c.make, c.model].filter(Boolean).join(' ') || c.title,
   // Versão do anúncio, ou segmento e potência quando o anúncio não tem versão
   carSub: (c) => c.version || [c.body, c.engineCc && (c.engineCc / 1000).toFixed(1), c.power && `${c.power} cv`].filter(Boolean).join(' · ') || c.title,
-  telHref: (p) => `tel:${String(p).replace(/[^\d+]/g, '')}`,
-  waLink: (text) => `https://wa.me/${config.stand.whatsapp}${text ? `?text=${encodeURIComponent(text)}` : ''}`,
+  // O número nunca vai por extenso no HTML (há bots a recolhê-lo):
+  //  - WhatsApp: os links vão para /whatsapp/, que só no clique reencaminha para o wa.me;
+  //  - telefone: aparece como "912 347 •••" e o browser monta o número quando a pessoa carrega em "Ver".
+  waLink: (text) => `/whatsapp/${text ? `?t=${encodeURIComponent(text)}` : ''}`,
+  phoneLink: (cls = '', icon = '') => {
+    const national = config.stand.phone.replace(/^\+351\s*/, '');
+    const coded = Buffer.from([...config.stand.phone].reverse().join('')).toString('base64');
+    return `<a href="/contactos/" class="js-phone ${cls}" data-p="${coded}" rel="nofollow" title="Mostrar o número">${icon === 'circulo' ? '<span class="ic"><svg><use href="#i-phone"/></svg></span>' : icon ? '<svg><use href="#i-phone"/></svg>' : ''}<span class="num js-phone-text">${national.replace(/\d{3}$/, '•••')}</span><span class="phone-reveal">Ver</span></a>`;
+  },
   mapsLink: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${config.stand.street}, ${config.stand.city}`)}`,
   mapsEmbed: `https://www.google.com/maps?q=${encodeURIComponent(`${config.stand.street}, ${config.stand.city}`)}&output=embed`,
   carUrl: (c) => `/stock/${c.slug}/`,
@@ -190,6 +197,13 @@ app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos',
 app.get('/politica-de-privacidade', (req, res) => res.render('privacidade', { page: '' }));
 app.get('/termos-e-condicoes-de-utilizacao', (req, res) => res.render('termos', { page: '' }));
 
+// WhatsApp: reencaminha para o wa.me com a mensagem já escrita (o número não aparece no HTML).
+const waUrl = (text) => `https://wa.me/${config.stand.whatsapp}${text ? `?text=${encodeURIComponent(text)}` : ''}`;
+app.get('/whatsapp', (req, res) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow');
+  res.redirect(302, waUrl(String(req.query.t || '').slice(0, 1500)));
+});
+
 // Formulários: o pedido segue pelo WhatsApp do stand, com a mensagem já escrita.
 const FORMS = {
   contactos: {
@@ -210,7 +224,7 @@ for (const [name, def] of Object.entries(FORMS)) {
     for (const [k] of def.fields) form[k] = String(req.body[k] || '').trim().slice(0, 2000);
     if (def.required.some((k) => !form[k])) return res.status(400).render(name, { page: name, missing: true, form });
     const lines = def.fields.filter(([k]) => form[k]).map(([k, label]) => `${label}: ${form[k]}`);
-    res.redirect(303, app.locals.waLink(`*${def.title}*\n${lines.join('\n')}`));
+    res.redirect(303, waUrl(`*${def.title}*\n${lines.join('\n')}`));
   });
 }
 
@@ -233,7 +247,7 @@ app.get('/sitemap.xml', wrap(async (req, res) => {
 }));
 
 app.get('/robots.txt', (req, res) =>
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: ${config.siteUrl}/sitemap.xml\n`)
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /whatsapp/\nDisallow: /api/\nSitemap: ${config.siteUrl}/sitemap.xml\n`)
 );
 
 // /healthz não funciona no Cloud Run (endereços acabados em "z" são reservados)

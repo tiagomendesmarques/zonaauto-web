@@ -7,7 +7,7 @@
     </div>
     <div class="band-actions">
       <a class="btn btn-wa" data-wa="rodape" href="<%= waLink('Olá! Gostaria de marcar uma visita ao stand.') %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Marcar por WhatsApp</a>
-      <a class="btn btn-outline-light" href="<%= telHref(stand.phone) %>"><svg><use href="#i-phone"/></svg><span class="num"><%= stand.phone %></span></a>
+      <%- phoneLink('btn btn-outline-light', true) %>
     </div>
   </div>
   <div class="wrap footer-grid">
@@ -32,7 +32,7 @@
       <h3>Contactos</h3>
       <address>
         <a href="<%= mapsLink %>" target="_blank" rel="noopener"><%= stand.street %><br><%= stand.city %></a>
-        <a href="<%= telHref(stand.phone) %>" class="num"><%= stand.phone %></a>
+        <%- phoneLink() %>
         <a href="mailto:<%= stand.email %>"><%= stand.email %></a>
       </address>
     </div>

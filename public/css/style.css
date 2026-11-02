@@ -424,6 +424,11 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
   .thumbs button { flex-basis: 84px; }
   .buy { padding: 22px; }
 }
+/* número de telefone escondido até carregar em "Ver" */
+.phone-reveal { margin-left: 8px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .02em; background: rgba(157, 133, 240, .2); color: inherit; }
+.js-phone[data-shown] .phone-reveal { display: none; }
+.buy-phone .js-phone, .contact-row .js-phone, .footer-grid .js-phone { display: inline-flex; align-items: center; }
+
 /* ---------- blog ---------- */
 .crumbs-dark { color: rgba(255, 255, 255, .6); }
 .crumbs-dark a:hover { color: #fff; }

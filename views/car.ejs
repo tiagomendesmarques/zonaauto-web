@@ -77,7 +77,7 @@
       <div class="buy-actions">
         <a class="btn btn-wa btn-block" data-wa="viatura_informacoes" href="<%= waLink(waInfo) %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Pedir informações</a>
         <a class="btn btn-ghost btn-block" data-wa="viatura_agendar_visita" href="<%= waLink(waVisit) %>" target="_blank" rel="noopener"><svg><use href="#i-calendar"/></svg>Agendar visita</a>
-        <p class="buy-phone">ou liga <a class="num" href="<%= telHref(stand.phone) %>"><%= stand.phone %></a></p>
+        <p class="buy-phone">ou liga <%- phoneLink() %></p>
       </div>
       <div class="perks">
         <span><svg><use href="#i-card"/></svg>Financiamento</span>

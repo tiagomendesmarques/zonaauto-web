@@ -55,7 +55,7 @@
       <% if (typeof hasBlog !== 'undefined' && hasBlog) { %><a href="/blog/" <%- page === 'blog' ? 'aria-current="page"' : '' %>>Blog</a><% } %>
       <a href="/contactos/" <%- page === 'contactos' ? 'aria-current="page"' : '' %>>Contactos</a>
     </nav>
-    <a class="header-phone" href="<%= telHref(stand.phone) %>"><span class="ic"><svg><use href="#i-phone"/></svg></span><span class="num"><%= stand.phone.replace('+351 ', '') %></span></a>
+    <%- phoneLink('header-phone', 'circulo') %>
     <button class="nav-toggle" type="button" aria-label="Abrir menu" aria-expanded="false"><svg><use href="#i-menu"/></svg></button>
   </div>
 </header>
