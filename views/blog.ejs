@@ -1,0 +1,29 @@
+<%- include('partials/header', { title: pageNum > 1 ? `Blog, página ${pageNum}` : 'Blog: guias para comprar carro usado', description: 'Guias práticos sobre comprar, financiar, importar e manter carros usados em Portugal, escritos pela equipa da Zona Auto.' }) %>
+<section class="page-head on-dark">
+  <img src="/static/img/processo-2.webp" alt="">
+  <div class="wrap">
+    <nav class="crumbs crumbs-dark" aria-label="Localização"><a href="/">Início</a><span aria-hidden="true">›</span><span>Blog</span></nav>
+    <h1 class="display">Blog<%= pageNum > 1 ? `, página ${pageNum}` : '' %></h1>
+    <p class="lead">Guias práticos para comprar, financiar, importar e manter o teu carro, sem letras pequenas.</p>
+  </div>
+</section>
+<section class="section" style="padding-top:48px">
+  <div class="wrap">
+    <% if (posts.length) { %>
+      <div class="post-grid"><% posts.forEach((p) => { %><%- include('partials/post-card', { p }) %><% }) %></div>
+    <% } else { %>
+      <div class="empty-state"><h3>Ainda não há artigos</h3><p>Os primeiros guias estão a ser preparados. Entretanto, vê as viaturas em stock.</p><a class="btn btn-primary" href="/stock/">Ver stock</a></div>
+    <% } %>
+    <% if (totalPages > 1) { %>
+    <nav class="pager" aria-label="Páginas">
+      <% if (pageNum > 1) { %><a class="btn btn-ghost" href="<%= pageHref(pageNum - 1) %>" rel="prev">Anterior</a><% } %>
+      <% window.forEach((n, i) => { %>
+        <% if (i > 0 && n - window[i - 1] > 1) { %><span class="pager-gap">…</span><% } %>
+        <a class="pager-num num" href="<%= pageHref(n) %>" <%- n === pageNum ? 'aria-current="page"' : '' %>><%= n %></a>
+      <% }) %>
+      <% if (pageNum < totalPages) { %><a class="btn btn-ghost" href="<%= pageHref(pageNum + 1) %>" rel="next">Seguinte</a><% } %>
+    </nav>
+    <% } %>
+  </div>
+</section>
+<%- include('partials/footer') %>

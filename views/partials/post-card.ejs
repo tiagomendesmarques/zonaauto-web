@@ -1,0 +1,11 @@
+<% const pimg = postImage(p, 800); %>
+<a class="post-card" href="/blog/<%= p.slug %>/">
+  <div class="post-card-media">
+    <% if (pimg) { %><img src="<%= pimg.src %>" srcset="<%= pimg.srcSet %>" sizes="(min-width: 1100px) 380px, (min-width: 700px) 50vw, 100vw" alt="<%= p.featuredImageAlt || '' %>" loading="lazy" width="800" height="450"><% } %>
+  </div>
+  <div class="post-card-body">
+    <% if (p.publishedAt) { %><time class="eyebrow num" datetime="<%= p.publishedAt.toISOString() %>"><%= fmtLongDate(p.publishedAt) %></time><% } %>
+    <h3><%= p.title %></h3>
+    <% if (p.excerpt) { %><p><%= p.excerpt %></p><% } %>
+  </div>
+</a>

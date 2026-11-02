@@ -4,6 +4,8 @@ const compression = require('compression');
 const config = require('./config');
 const store = require('./store');
 const photos = require('./photos');
+const blog = require('./blog/routes');
+const media = require('./blog/media');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -11,9 +13,18 @@ app.set('views', path.join(__dirname, '..', 'views'));
 app.set('trust proxy', true);
 app.disable('x-powered-by');
 app.use(compression());
-app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 app.use('/static', express.static(path.join(__dirname, '..', 'public'), { maxAge: '7d' }));
 app.get('/foto/:id/:size.jpg', photos.handler);
+app.get(/^\/media\/(.+)$/, media.handler);
+// API de artigos: tem a sua própria leitura do corpo (JSON até 1 MB)
+app.use('/api/v1/artigos', blog.apiRouter);
+app.use(express.urlencoded({ extended: false, limit: '20kb' }));
+// Endereço da página (para o canonical) e "Blog" no menu quando há artigos
+app.use((req, res, next) => {
+  res.locals.reqPath = req.path;
+  next();
+});
+app.use(blog.nav);
 
 // ---------- helpers disponíveis nas views ----------
 const nf = new Intl.NumberFormat('pt-PT', { useGrouping: 'always' }); // "9 990" e não "9990"
@@ -30,6 +41,7 @@ Object.assign(app.locals, {
   assetVersion: process.env.K_REVISION || Date.now().toString(36),
   siteUrl: config.siteUrl,
   fmtNum: (v) => (v != null ? nf.format(v) : '—'),
+  fmtLongDate: (d) => new Intl.DateTimeFormat('pt-PT', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Lisbon' }).format(d),
   fmtPrice: (v) => (v ? `${nf.format(Math.round(v))} €` : 'Sob consulta'),
   fmtKm: (v) => (v != null ? `${nf.format(v)} km` : '—'),
   // "07/2009" quando há mês de registo
@@ -208,10 +220,14 @@ app.get('/api/viaturas', wrap(async (req, res) => {
 
 app.get('/sitemap.xml', wrap(async (req, res) => {
   const cars = await store.getCars();
-  const urls = ['/', '/stock/', '/importacao/', '/contactos/', ...cars.map((c) => `/stock/${c.slug}/`)];
+  const posts = await blog.sitemapEntries();
+  const urls = [
+    ...['/', '/stock/', '/importacao/', '/contactos/', ...cars.map((c) => `/stock/${c.slug}/`)].map((path) => ({ path })),
+    ...(posts.length ? [{ path: '/blog/', lastmod: posts.reduce((a, p) => (p.lastmod > a ? p.lastmod : a), posts[0].lastmod) }, ...posts] : []),
+  ];
   res.type('application/xml').send(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-      .map((u) => `  <url><loc>${config.siteUrl}${u}</loc></url>`)
+      .map((u) => `  <url><loc>${config.siteUrl}${u.path}</loc>${u.lastmod ? `<lastmod>${u.lastmod.toISOString()}</lastmod>` : ''}</url>`)
       .join('\n')}\n</urlset>`
   );
 }));
@@ -233,6 +249,19 @@ app.all('/tarefas/sincronizar', wrap(async (req, res) => {
   res.json({ ok: !store.state.lastError, cars: store.state.cars.length, error: store.state.lastError });
 }));
 
+// Limpeza diária das imagens do blog que nenhum artigo usa (Cloud Scheduler).
+app.all('/tarefas/limpar-imagens', wrap(async (req, res) => {
+  const token = req.get('x-sync-token') || req.query.token;
+  if (!config.syncToken || token !== config.syncToken) return res.status(403).json({ ok: false });
+  try {
+    res.json({ ok: true, ...(await blog.cleanupImages()) });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+}));
+
+app.use(blog.pages);
+app.use(blog.redirects);
 app.use((req, res) => res.status(404).render('404', { page: '', sold: false }));
 app.use((err, req, res, next) => {
   console.error(err);

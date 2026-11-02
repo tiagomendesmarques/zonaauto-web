@@ -46,6 +46,11 @@ quiet gcloud projects add-iam-policy-binding "$PROJECT_ID" \
   --member="serviceAccount:$COMPUTE_SA" --role="roles/run.builder" --condition=None
 
 step "A publicar no Cloud Run"
+# Mantém a chave da API de artigos em cada deploy (criada por deploy/blog-setup.sh)
+SECRET_FLAGS=()
+if gcloud secrets describe zonaauto-blog-api-token >/dev/null 2>&1; then
+  SECRET_FLAGS=(--update-secrets "BLOG_API_TOKEN=zonaauto-blog-api-token:latest")
+fi
 ENV_FILE=$(mktemp)
 trap 'rm -f "$ENV_FILE"' EXIT
 [ -f env.yaml ] && cat env.yaml > "$ENV_FILE"
@@ -60,6 +65,7 @@ gcloud run deploy "$SERVICE" \
   --min-instances 0 \
   --max-instances 3 \
   --env-vars-file "$ENV_FILE" \
+  "${SECRET_FLAGS[@]}" \
   --quiet
 URL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')
 
@@ -109,6 +115,9 @@ else
   echo "Cria estas variáveis em https://github.com/${GITHUB_REPO}/settings/variables/actions :"
   for KV in "${VARS[@]}"; do echo "  ${KV%%=*} = ${KV#*=}"; done
 fi
+
+step "Blog (Firestore, chave da API e limpeza de imagens)"
+PROJECT_ID="$PROJECT_ID" REGION="$REGION" SERVICE="$SERVICE" ./deploy/blog-setup.sh
 
 step "Concluído"
 echo "Site: $URL"
