@@ -8,9 +8,10 @@ Menu do ambiente, na barra do título da sessão → Edit:
 
 - **Variáveis de ambiente / Network secrets** (nunca colar estas chaves no chat):
   - `ZONAAUTO_BLOG_TOKEN`: a chave da API de artigos. Para a ver, no Cloud Shell: `gcloud secrets versions access latest --secret=zonaauto-blog-api-token`.
-  - `PEXELS_API_KEY`: chave grátis em https://www.pexels.com/api/ ("Get started").
   - `UNSPLASH_ACCESS_KEY`: chave grátis em https://unsplash.com/developers ("New Application" → "Access Key").
-- **Rede:** `zonaauto.pt`, `api.pexels.com`, `images.pexels.com`, `api.unsplash.com`, `images.unsplash.com`.
+- **Rede:** `zonaauto.pt`, `api.unsplash.com`, `images.unsplash.com`.
+
+As imagens vêm só do Unsplash (o Pexels não estava a dar chaves novas). A API do site continua a aceitar as duas.
 - **Conector:** Google Sheets (para ler as palavras-chave e atualizar a memória e as imagens usadas).
 
 ## Folha de cálculo
@@ -31,7 +32,7 @@ Todos os dias às 6h37 de Lisboa (`CRON_TZ=Europe/Lisbon 37 6 * * *`), numa sess
 
 Escreve e publica o próximo artigo do blog da Zona Auto (https://zonaauto.pt), um stand de carros usados em Lisboa, em português de Portugal, usando a API de artigos.
 
-**Chaves (variáveis de ambiente; nunca as mostres, escrevas nem copies para lado nenhum):** `$ZONAAUTO_BLOG_TOKEN` (API do blog), `$PEXELS_API_KEY`, `$UNSPLASH_ACCESS_KEY`.
+**Chaves (variáveis de ambiente; nunca as mostres, escrevas nem copies para lado nenhum):** `$ZONAAUTO_BLOG_TOKEN` (API do blog) e `$UNSPLASH_ACCESS_KEY` (imagens).
 
 **API do blog** (base `https://zonaauto.pt/api/v1/artigos/`, sempre com `/` no fim; cabeçalho `Authorization: Bearer $ZONAAUTO_BLOG_TOKEN`; JSON):
 - `GET contexto/` → `usedKeywords`, `posts`, `pages`, `usefulLinks`, `makes`, `cars`, `notes`, `limits`.
@@ -56,10 +57,13 @@ Escreve e publica o próximo artigo do blog da Zona Auto (https://zonaauto.pt), 
 - Na dúvida, não ponhas números, prazos ou valores. Nunca inventes estatísticas, preços, casos ou citações.
 - Sobre a Zona Auto, diz só o que é verdade: stand de carros usados em Lisboa; carros revistos e com garantia (vê a garantia de cada carro no contexto, não prometas mais); financiamento; retoma; importação por encomenda; entregas em Portugal continental. Contactos por WhatsApp e telefone (o site já os mostra; não é preciso pô-los no texto).
 
-**3. Imagem de destaque.**
+**3. Imagem de destaque (só do Unsplash).**
 - Antes de escolher, lê `imagens-usadas` e não uses nenhuma foto que lá esteja (compara a coluna "chave").
-- Procura no **Pexels**: `GET https://api.pexels.com/v1/search?query=…&orientation=landscape&per_page=15`, cabeçalho `Authorization: $PEXELS_API_KEY`. Pesquisa em inglês. Usa `src.large2x`. Crédito `"Foto: {photographer} / Pexels"`, `creditUrl` = `photographer_url`. Chave na folha: `pexels:{id}`.
-- Se não houver nada bom, usa o **Unsplash**: `GET https://api.unsplash.com/search/photos?query=…&orientation=landscape`, cabeçalho `Authorization: Client-ID $UNSPLASH_ACCESS_KEY`. Usa `urls.raw`, chama `links.download_location` com o mesmo cabeçalho (obrigatório pelas regras do Unsplash). Crédito `"Foto: {user.name} / Unsplash"`, `creditUrl` = `{user.links.html}?utm_source=zona_auto&utm_medium=referral`. Chave na folha: `unsplash:{id}`.
+- Procura no Unsplash: `GET https://api.unsplash.com/search/photos?query=…&orientation=landscape&per_page=20`, cabeçalho `Authorization: Client-ID $UNSPLASH_ACCESS_KEY`. Pesquisa em inglês (ex.: "used car dealership", "car showroom", "driving car city"). Se não houver nada bom, tenta outras pesquisas, no máximo 5.
+- Usa `urls.raw` como `featuredImage.url` (é de `images.unsplash.com`).
+- Chama `links.download_location` com o mesmo cabeçalho (obrigatório pelas regras do Unsplash).
+- Crédito `"Foto: {user.name} / Unsplash"`, `creditUrl` = `{user.links.html}?utm_source=zona_auto&utm_medium=referral`.
+- Na folha: chave `unsplash:{id}`, ficheiro = o nome do ficheiro em `urls.raw` (ex.: `photo-1753351052617-62818ffc9173`), página da foto = `links.html`.
 - A foto deve mostrar carros, um stand, uma estrada ou alguém a conduzir, de acordo com o tema; sem matrículas legíveis, sem logótipos de outros stands e sem texto por cima.
 - `alt` em português, a descrever o que se vê (ex.: "Fila de carros usados em exposição num stand").
 
@@ -89,7 +93,7 @@ Escreve e publica o próximo artigo do blog da Zona Auto (https://zonaauto.pt), 
 
 **8. Atualizar a folha** (só depois de o artigo estar criado no site):
 - `memory!A1` = N (mesmo que tenha ficado em rascunho, para amanhã avançar).
-- Acrescenta uma linha a `imagens-usadas`: chave (`pexels:{id}` ou `unsplash:{id}`), ficheiro (nome ou id da foto no banco), banco, fotógrafo, página da foto, N, id do artigo no site, palavra-chave, data de hoje (AAAA-MM-DD) e notas (vazio, ou "rascunho" se não foi publicado).
+- Acrescenta uma linha a `imagens-usadas`: chave (`unsplash:{id}`), ficheiro, banco (`Unsplash`), fotógrafo, página da foto, N, id do artigo no site, palavra-chave, data de hoje (AAAA-MM-DD) e notas (vazio, ou "rascunho" se não foi publicado).
 
 **9. Resumo final:** número N e palavra-chave; título; estado (publicado ou rascunho, e porquê); pontuação SEO; `url`; imagem e crédito; fontes usadas; o que deva verificar à mão.
 
