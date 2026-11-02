@@ -37,6 +37,10 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 | `/sitemap.xml`, `/robots.txt` | SEO (cada viatura tem também dados estruturados schema.org) |
 | `/estado` | Estado: nº de viaturas, última sincronização, último erro |
 | `/api/viaturas` | Inventário em JSON |
+| `/blog/`, `/blog/page/{n}/` | Lista de artigos (12 por página) |
+| `/blog/{slug}/` | Artigo, com perguntas frequentes, fontes e dados estruturados para o Google |
+| `/feed/` | RSS dos últimos 20 artigos |
+| `/api/v1/artigos/` | API para criar e gerir artigos (ver [docs/API_ARTIGOS.md](docs/API_ARTIGOS.md)) |
 
 Os endereços antigos do WordPress (`/listings/...`) redirecionam para a viatura correspondente ou para o stock.
 
@@ -76,6 +80,14 @@ copiar os registos DNS indicados para o fornecedor do domínio.
 
 Se uma publicação falhar, o Cloud Run continua a servir a versão anterior. Para voltar atrás:
 Cloud Run → `zonaauto` → *Revisões* → enviar o tráfego para a revisão anterior.
+
+## Blog
+
+Os artigos entram pela API (`/api/v1/artigos/`), pensada para uma tarefa agendada do Claude: cada
+artigo leva uma pontuação SEO de 0 a 100 e é recusado se tiver erros. Ficam guardados no Firestore;
+as imagens do Pexels são convertidas para WebP e guardadas no bucket, as do Unsplash ficam no Unsplash.
+Não há back-office. Instalar uma vez: `PROJECT_ID=o-meu-projeto ./deploy/blog-setup.sh`.
+Tudo sobre a API: [docs/API_ARTIGOS.md](docs/API_ARTIGOS.md).
 
 ## Medição (Google Tag Manager / Meta)
 
