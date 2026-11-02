@@ -1,0 +1,93 @@
+<%
+  const keywords = [post.focusKeyword, ...(post.secondaryKeywords || [])].filter(Boolean);
+  const url = `${siteUrl}/blog/${post.slug}/`;
+  const org = { '@type': 'Organization', name: stand.name, url: siteUrl + '/', logo: { '@type': 'ImageObject', url: siteUrl + '/static/img/logo-512.png', width: 512, height: 512 } };
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'BlogPosting', headline: post.title,
+    description: post.seoDescription || post.excerpt || undefined, inLanguage: 'pt-PT',
+    datePublished: post.publishedAt ? post.publishedAt.toISOString() : undefined, dateModified: post.updatedAt.toISOString(),
+    image: imageAbs || undefined, keywords: keywords.length ? keywords.join(', ') : undefined,
+    author: { ...org, name: `Equipa ${stand.name}` }, publisher: org,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+  };
+  const faq = post.faq || [];
+  const faqLd = faq.length ? { '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: faq.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })) } : null;
+  const ld = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
+%>
+<%- include('partials/header', {
+  description: post.seoDescription || post.excerpt,
+  ogImage: imageAbs,
+  seo: { fullTitle: post.seoTitle || post.title, keywords, ogType: 'article', ogImageAlt: featured ? (post.featuredImageAlt || post.title) : null,
+         twitterCard: featured ? 'summary_large_image' : 'summary', article: { published: post.publishedAt, modified: post.updatedAt, tags: post.tags || [] } },
+}) %>
+<script type="application/ld+json"><%- ld(jsonLd) %></script>
+<% if (faqLd) { %><script type="application/ld+json"><%- ld(faqLd) %></script><% } %>
+
+<div class="wrap post-layout">
+  <article class="post">
+    <nav class="crumbs" aria-label="Localização"><a href="/">Início</a><span aria-hidden="true">›</span><a href="/blog/">Blog</a></nav>
+    <% if (post.publishedAt) { %><time class="eyebrow num" datetime="<%= post.publishedAt.toISOString() %>"><%= fmtLongDate(post.publishedAt) %></time><% } %>
+    <h1 class="post-title"><%= post.title %></h1>
+    <% if (featured) { %>
+    <figure class="post-figure">
+      <img src="<%= featured.src %>" srcset="<%= featured.srcSet %>" sizes="(min-width: 1100px) 760px, 100vw" alt="<%= post.featuredImageAlt || '' %>" fetchpriority="high" width="1600" height="900">
+      <% if (post.featuredImageCaption || post.featuredImageCredit) { %>
+      <figcaption>
+        <%= post.featuredImageCaption || '' %><% if (post.featuredImageCaption && post.featuredImageCredit) { %> · <% } %>
+        <% if (post.featuredImageCredit) { %><% if (post.featuredImageCreditUrl) { %><a href="<%= post.featuredImageCreditUrl %>" target="_blank" rel="noopener nofollow"><%= post.featuredImageCredit %></a><% } else { %><%= post.featuredImageCredit %><% } %><% } %>
+      </figcaption>
+      <% } %>
+    </figure>
+    <% } %>
+    <div class="prose-post"><%- contentHtml %></div>
+
+    <% if (faq.length) { %>
+    <section class="post-section" aria-labelledby="faq-artigo">
+      <h2 id="faq-artigo">Perguntas frequentes</h2>
+      <div class="faq-list">
+        <% faq.forEach((f, i) => { %><details <%= i === 0 ? 'open' : '' %>><summary><%= f.question %><span class="pm"></span></summary><p><%= f.answer %></p></details><% }) %>
+      </div>
+    </section>
+    <% } %>
+
+    <% if ((post.sources || []).length) { %>
+    <section class="post-sources" aria-labelledby="fontes-artigo">
+      <h2 id="fontes-artigo">Fontes</h2>
+      <ul><% post.sources.forEach((s) => { %><li><a href="<%= s.url %>" target="_blank" rel="noopener nofollow"><%= s.title %></a></li><% }) %></ul>
+    </section>
+    <% } %>
+
+    <% if ((post.tags || []).length) { %><div class="chips post-tags"><% post.tags.forEach((t) => { %><span class="chip"><%= t %></span><% }) %></div><% } %>
+  </article>
+
+  <aside class="post-aside">
+    <div class="side-card on-dark">
+      <h3>À procura de carro?</h3>
+      <p>Viaturas revistas, com garantia e financiamento. Vê o stock ou fala connosco.</p>
+      <a class="btn btn-light" href="/stock/">Ver stock<svg><use href="#i-arrow"/></svg></a>
+      <a class="btn btn-wa" data-wa="blog_artigo" href="<%= waLink(`Olá! Li o artigo "${post.title}" no vosso site e gostava de mais informações.`) %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>Falar no WhatsApp</a>
+    </div>
+    <% if (cars.length) { %>
+    <div class="aside-cars">
+      <p class="eyebrow">Em stock agora</p>
+      <% cars.forEach((c) => { %>
+      <a class="aside-car" href="<%= carUrl(c) %>">
+        <img src="<%= img(c.images[0], '200x150') %>" alt="" loading="lazy" width="200" height="150">
+        <span><strong><%= carName(c) %></strong><small class="num"><%= fmtDate(c) %> · <%= fmtKm(c.km) %></small><span class="price num"><%= fmtPrice(c.price) %></span></span>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+  </aside>
+</div>
+
+<% if (related.length) { %>
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head"><div><p class="eyebrow">Continua a ler</p><h2 class="section-title display">Mais do blog.</h2></div><a href="/blog/" class="link-arrow">Todos os artigos<svg><use href="#i-arrow"/></svg></a></div>
+    <div class="post-grid"><% related.forEach((p) => { %><%- include('partials/post-card', { p }) %><% }) %></div>
+  </div>
+</section>
+<% } %>
+<%- include('partials/footer') %>

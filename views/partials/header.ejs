@@ -3,11 +3,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title><%= typeof title !== 'undefined' ? title + ' | ' + stand.name : stand.name + ' | Carros usados em Lisboa' %></title>
-  <meta name="description" content="<%= typeof description !== 'undefined' ? description : 'Encontra, compara e escolhe o carro ideal com total confiança. Viaturas com garantia, financiamento e retoma.' %>">
-  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : stand.name %>">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="<%= typeof ogImage !== 'undefined' ? ogImage : siteUrl + '/static/img/hero-home.webp' %>">
+<%
+  // seo (opcional): { fullTitle, keywords, ogType, ogImageAlt, article: { published, modified, tags }, noSuffix }
+  const meta = typeof seo !== 'undefined' && seo ? seo : {};
+  const pageTitle = meta.fullTitle || (typeof title !== 'undefined' ? title + ' | ' + stand.name : stand.name + ' | Carros usados em Lisboa');
+  const pageDesc = typeof description !== 'undefined' && description ? description : 'Encontra, compara e escolhe o carro ideal com total confiança. Viaturas com garantia, financiamento e retoma.';
+  const pageImage = typeof ogImage !== 'undefined' && ogImage ? ogImage : siteUrl + '/static/img/hero-home.webp';
+  const canonical = siteUrl + (typeof reqPath !== 'undefined' ? reqPath : '/');
+%>
+  <title><%= pageTitle %></title>
+  <meta name="description" content="<%= pageDesc %>">
+  <link rel="canonical" href="<%= canonical %>">
+  <% if (meta.keywords && meta.keywords.length) { %><meta name="keywords" content="<%= meta.keywords.join(', ') %>"><% } %>
+  <meta property="og:title" content="<%= meta.fullTitle || (typeof title !== 'undefined' ? title : stand.name) %>">
+  <meta property="og:description" content="<%= pageDesc %>">
+  <meta property="og:type" content="<%= meta.ogType || 'website' %>">
+  <meta property="og:url" content="<%= canonical %>">
+  <meta property="og:site_name" content="<%= stand.name %>">
+  <meta property="og:locale" content="pt_PT">
+  <meta property="og:image" content="<%= pageImage %>">
+  <% if (meta.ogImageAlt) { %><meta property="og:image:alt" content="<%= meta.ogImageAlt %>"><% } %>
+  <% if (meta.article) { %>
+  <% if (meta.article.published) { %><meta property="article:published_time" content="<%= meta.article.published.toISOString() %>"><% } %>
+  <% if (meta.article.modified) { %><meta property="article:modified_time" content="<%= meta.article.modified.toISOString() %>"><% } %>
+  <% (meta.article.tags || []).forEach((t) => { %><meta property="article:tag" content="<%= t %>"><% }) %>
+  <% } %>
+  <meta name="twitter:card" content="<%= meta.twitterCard || 'summary_large_image' %>">
+  <meta name="twitter:title" content="<%= meta.fullTitle || (typeof title !== 'undefined' ? title : stand.name) %>">
+  <meta name="twitter:description" content="<%= pageDesc %>">
+  <% if (meta.twitterCard !== 'summary') { %><meta name="twitter:image" content="<%= pageImage %>"><% } %>
+  <% if (typeof hasBlog !== 'undefined' && hasBlog) { %><link rel="alternate" type="application/rss+xml" title="Blog <%= stand.name %>" href="/feed/"><% } %>
   <meta name="theme-color" content="#0e001e">
   <% if (gtmId) { %><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','<%= gtmId %>');</script><% } %>
   <link rel="icon" href="/static/img/favicon.png" sizes="32x32">
@@ -27,6 +52,7 @@
       <a href="/" <%- page === 'home' ? 'aria-current="page"' : '' %>>Início</a>
       <a href="/stock/" <%- page === 'stock' ? 'aria-current="page"' : '' %>>Stock</a>
       <a href="/importacao/" <%- page === 'importacao' ? 'aria-current="page"' : '' %>>Importação</a>
+      <% if (typeof hasBlog !== 'undefined' && hasBlog) { %><a href="/blog/" <%- page === 'blog' ? 'aria-current="page"' : '' %>>Blog</a><% } %>
       <a href="/contactos/" <%- page === 'contactos' ? 'aria-current="page"' : '' %>>Contactos</a>
     </nav>
     <a class="header-phone" href="<%= telHref(stand.phone) %>"><span class="ic"><svg><use href="#i-phone"/></svg></span><span class="num"><%= stand.phone.replace('+351 ', '') %></span></a>
