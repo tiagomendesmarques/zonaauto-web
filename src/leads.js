@@ -1,4 +1,4 @@
-// Contactos do simulador do apoio a carros elétricos (/apoio-eletrico/), guardados no Firestore (coleção "leads").
+// Contactos do simulador do apoio a carros elétricos (/apoio-eletrico-simulador-2027/), guardados no Firestore (coleção "leads").
 // Para os ver: consola do Firestore no GCP → coleção "leads".
 const crypto = require('crypto');
 const express = require('express');

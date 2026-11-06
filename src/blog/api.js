@@ -56,6 +56,7 @@ const zodErrors = (e) => e.issues.map((i) => `${i.path.join('.') || 'pedido'}: $
 const USEFUL_LINKS = [
   { title: 'Stock de viaturas', url: '/stock/' },
   { title: 'Importação de carros por encomenda', url: '/importacao/' },
+  { title: 'Simulador do apoio de 2027 para carro elétrico', url: '/apoio-eletrico-simulador-2027/' },
   { title: 'Contactos', url: '/contactos/' },
   { title: 'Blog', url: '/blog/' },
   { title: 'Página inicial', url: '/' },

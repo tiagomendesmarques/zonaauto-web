@@ -202,7 +202,12 @@ app.get('/importacao', (req, res) => res.render('importacao', { page: 'importaca
 app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos', missing: false, form: {} }));
 const apoioRegras = require('../public/js/apoio-eletrico-regras');
 const eurPt = (n) => `${nf.format(Math.round(n)).replace(/\s/g, '.')} €`;
-app.get('/apoio-eletrico', (req, res) => res.render('apoio-eletrico', {
+// O simulador mudou de endereço; o antigo continua a funcionar (301)
+app.get('/apoio-eletrico', (req, res) => {
+  const qs = req.originalUrl.indexOf('?');
+  res.redirect(301, `/apoio-eletrico-simulador-2027/${qs >= 0 ? req.originalUrl.slice(qs) : ''}`);
+});
+app.get('/apoio-eletrico-simulador-2027', (req, res) => res.render('apoio-eletrico', {
   page: 'apoio', consentimento: leads.CONSENTIMENTO, rules: apoioRegras.RULES, exemplo: apoioRegras.simulate(20000, false), eur: eurPt,
 }));
 app.get('/politica-de-privacidade', (req, res) => res.render('privacidade', { page: '' }));
@@ -247,7 +252,7 @@ app.get('/sitemap.xml', wrap(async (req, res) => {
   const cars = await store.getCars();
   const posts = await blog.sitemapEntries();
   const urls = [
-    ...['/', '/stock/', '/importacao/', '/apoio-eletrico/', '/contactos/', ...cars.map((c) => `/stock/${c.slug}/`)].map((path) => ({ path })),
+    ...['/', '/stock/', '/importacao/', '/apoio-eletrico-simulador-2027/', '/contactos/', ...cars.map((c) => `/stock/${c.slug}/`)].map((path) => ({ path })),
     ...(posts.length ? [{ path: '/blog/', lastmod: posts.reduce((a, p) => (p.lastmod > a ? p.lastmod : a), posts[0].lastmod) }, ...posts] : []),
   ];
   res.type('application/xml').send(

@@ -32,7 +32,7 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 | `/stock/` | Todas as viaturas, com filtros (marca, modelo, combustível, caixa, segmento, preço, ano, km) e ordenação |
 | `/stock/<marca-modelo-ano-ref>/` | Galeria, preço, características agrupadas, equipamento, descrição, WhatsApp e telefone |
 | `/importacao/`, `/contactos/` | Formulários que abrem o WhatsApp do stand com o pedido já escrito |
-| `/apoio-eletrico/` | Simulador do apoio de 2027 para famílias carenciadas comprarem carro elétrico (o contacto fica gravado antes de se ver o resultado) |
+| `/apoio-eletrico-simulador-2027/` | Simulador do apoio de 2027 para famílias carenciadas comprarem carro elétrico (o contacto fica gravado antes de se ver o resultado) |
 | `/politica-de-privacidade/`, `/termos-e-condicoes-de-utilizacao/` | Textos legais do site anterior |
 | `/foto/<id>/<tamanho>.jpg` | Fotos do Standvirtual servidas pelo próprio site, com cache |
 | `/sitemap.xml`, `/robots.txt` | SEO (cada viatura tem também dados estruturados schema.org) |
@@ -93,7 +93,7 @@ Tudo sobre a API: [docs/API_ARTIGOS.md](docs/API_ARTIGOS.md).
 
 ## Simulador do apoio a carros elétricos
 
-`/apoio-eletrico/`: 5 perguntas, contacto obrigatório e depois o resultado (tem direito, perto do limite,
+`/apoio-eletrico-simulador-2027/`: 5 perguntas, contacto obrigatório e depois o resultado (tem direito, perto do limite,
 acima do limite) com as contas do apoio. As regras anunciadas estão todas em `RULES`, no topo de
 `public/js/apoio-eletrico-regras.js`; quando sair o regulamento, muda-se só aí (as contas do servidor e
 os testes usam o mesmo ficheiro). A prestação indicativa do crédito (120 meses, TAEG de referência de 11%)
