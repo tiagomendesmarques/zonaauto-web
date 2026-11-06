@@ -7,6 +7,7 @@ const photos = require('./photos');
 const blog = require('./blog/routes');
 const media = require('./blog/media');
 const leads = require('./leads');
+const admin = require('./admin');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -28,6 +29,8 @@ app.use((req, res, next) => {
   next();
 });
 app.use(blog.nav);
+// Área de gestão escondida (contactos do simulador). Ver src/admin.js.
+app.use('/gestao', admin.router);
 
 // ---------- helpers disponíveis nas views ----------
 const nf = new Intl.NumberFormat('pt-PT', { useGrouping: 'always' }); // "9 990" e não "9990"
@@ -197,7 +200,7 @@ app.get(['/contact-us', '/contact'], (req, res) => res.redirect(301, '/contactos
 
 app.get('/importacao', (req, res) => res.render('importacao', { page: 'importacao', missing: false, form: {} }));
 app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos', missing: false, form: {} }));
-app.get('/apoio-eletrico', (req, res) => res.render('apoio-eletrico', { page: '', consentimento: leads.CONSENTIMENTO }));
+app.get('/apoio-eletrico', (req, res) => res.render('apoio-eletrico', { page: 'apoio', consentimento: leads.CONSENTIMENTO }));
 app.get('/politica-de-privacidade', (req, res) => res.render('privacidade', { page: '' }));
 app.get('/termos-e-condicoes-de-utilizacao', (req, res) => res.render('termos', { page: '' }));
 

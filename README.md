@@ -102,6 +102,17 @@ Os contactos ficam no Firestore, na coleção `leads` (consola do GCP → Firest
 o resultado recalculado no servidor e o texto e a data do consentimento. Máximo de 10 contactos por hora
 por IP e 500 no total; um campo escondido apanha bots.
 
+## Área de gestão (escondida)
+
+`/gestao/`: lista dos contactos do simulador, com filtros, estado (novo, contactado, interessado, sem
+interesse), nota, botão para apagar e exportação para Excel (CSV). Não há ligações para lá, não entra
+no sitemap e as páginas pedem para não ser indexadas. Entra-se com a conta Google; só os emails de
+`ADMIN_EMAILS` têm acesso, e a sessão dura 12 horas.
+
+Ligar uma vez: criar no GCP um cliente OAuth do tipo "Aplicação Web" (origem `https://zonaauto.pt`,
+redirecionamento `https://zonaauto.pt/gestao/entrar`) e correr
+`PROJECT_ID=… GOOGLE_CLIENT_ID=… ADMIN_EMAILS=… ./deploy/gestao-setup.sh`.
+
 ## Medição (Google Tag Manager / Meta)
 
 O site carrega o GTM `GTM-NNQ8RX77` (variável `GTM_ID`) e envia para o `dataLayer`:

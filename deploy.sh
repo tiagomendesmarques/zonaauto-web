@@ -55,6 +55,17 @@ ENV_FILE=$(mktemp)
 trap 'rm -f "$ENV_FILE"' EXIT
 [ -f env.yaml ] && cat env.yaml > "$ENV_FILE"
 printf '\nSNAPSHOT_BUCKET: "%s"\nSYNC_TOKEN: "%s"\n' "$BUCKET" "$SYNC_TOKEN" >> "$ENV_FILE"
+# Mantém o acesso à área de gestão (criado por deploy/gestao-setup.sh)
+for VAR in GOOGLE_CLIENT_ID ADMIN_EMAILS; do
+  VAL=$(gcloud run services describe "$SERVICE" --region "$REGION" --format=json 2>/dev/null | python3 -c "
+import json, sys
+try:
+    env = json.load(sys.stdin)['spec']['template']['spec']['containers'][0].get('env', [])
+    print(next((e.get('value', '') for e in env if e['name'] == '$VAR'), ''))
+except Exception:
+    pass" || true)
+  if [ -n "$VAL" ]; then printf '%s: "%s"\n' "$VAR" "$VAL" >> "$ENV_FILE"; fi
+done
 gcloud run deploy "$SERVICE" \
   --source . \
   --region "$REGION" \

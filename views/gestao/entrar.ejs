@@ -1,0 +1,18 @@
+<%- include('_head', { pageTitle: 'Entrar' }) %>
+<main class="g-login">
+  <div class="g-login-card">
+    <img src="/static/img/logo-branco.webp" alt="zonaauto.pt" width="146" height="44">
+    <h1 class="display">Área de gestão</h1>
+    <% if (error) { %><p class="g-alert"><%= error %></p><% } %>
+    <% if (missing.length) { %>
+      <p class="g-muted">Falta configurar no Cloud Run: <strong><%= missing.join(', ') %></strong>. Vê <code>deploy/gestao-setup.sh</code>.</p>
+    <% } else { %>
+      <p class="g-muted">Entra com a tua conta Google. Só os emails autorizados têm acesso.</p>
+      <script src="https://accounts.google.com/gsi/client" async></script>
+      <div id="g_id_onload" data-client_id="<%= clientId %>" data-login_uri="<%= loginUri %>" data-ux_mode="redirect" data-auto_prompt="false" data-itp_support="true"></div>
+      <div class="g_id_signin" data-type="standard" data-theme="filled_black" data-size="large" data-shape="pill" data-text="signin_with" data-locale="pt-PT"></div>
+    <% } %>
+  </div>
+</main>
+</body>
+</html>

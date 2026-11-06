@@ -503,3 +503,17 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
+
+/* Destaque do simulador do apoio a carros elétricos na página inicial */
+.promo-apoio { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 20px 24px; padding: 24px 28px; border-radius: var(--r-lg); background: var(--card); border: 1.5px solid var(--line); box-shadow: var(--shadow); color: var(--text); text-decoration: none; transition: border-color .18s; }
+.promo-apoio:hover { border-color: var(--violet); }
+.promo-apoio-ic { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: rgba(84, 43, 228, .1); color: var(--violet); }
+.promo-apoio-ic svg { width: 28px; height: 28px; }
+.promo-apoio-txt { display: grid; gap: 4px; }
+.promo-apoio-txt strong { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: clamp(19px, 2.2vw, 24px); line-height: 1.15; }
+.promo-apoio-txt > span:last-child { color: var(--muted); font-size: 15px; }
+@media (max-width: 760px) {
+  .promo-apoio { grid-template-columns: minmax(0, 1fr); padding: 22px 20px; }
+  .promo-apoio-ic { display: none; }
+  .promo-apoio .btn { width: 100%; }
+}
