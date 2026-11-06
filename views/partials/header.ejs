@@ -41,7 +41,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,100..125,400..900;1,100..125,400..900&family=Figtree:wght@400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css?v=<%= assetVersion %>">
-</head>
+  <% (typeof extraCss !== 'undefined' ? extraCss : []).forEach((f) => { %><link rel="stylesheet" href="/static/css/<%= f %>?v=<%= assetVersion %>">
+  <% }) %></head>
 <body<% if (typeof viatura !== 'undefined' && viatura) { %> data-viatura="<%= viatura.nome %>" data-valor="<%= viatura.valor || '' %>"<% } %>>
 <% if (gtmId) { %><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<%= gtmId %>" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript><% } %>
 <%- include('icons') %>
@@ -52,6 +53,7 @@
       <a href="/" <%- page === 'home' ? 'aria-current="page"' : '' %>>Início</a>
       <a href="/stock/" <%- page === 'stock' ? 'aria-current="page"' : '' %>>Stock</a>
       <a href="/importacao/" <%- page === 'importacao' ? 'aria-current="page"' : '' %>>Importação</a>
+      <a href="/apoio-eletrico/" <%- page === 'apoio' ? 'aria-current="page"' : '' %>>Apoio elétrico</a>
       <% if (typeof hasBlog !== 'undefined' && hasBlog) { %><a href="/blog/" <%- page === 'blog' ? 'aria-current="page"' : '' %>>Blog</a><% } %>
       <a href="/contactos/" <%- page === 'contactos' ? 'aria-current="page"' : '' %>>Contactos</a>
     </nav>

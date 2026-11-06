@@ -1,0 +1,86 @@
+<%- include('_head', { pageTitle: 'Contactos' }) %>
+<header class="g-top">
+  <div class="g-wrap g-top-inner">
+    <a href="/gestao/" class="g-brand"><img src="/static/img/logo-branco.webp" alt="zonaauto.pt" width="120" height="36"><span>Gestão</span></a>
+    <form method="post" action="/gestao/sair" class="g-user">
+      <span><%= admin.email %></span>
+      <button class="btn btn-outline-light" type="submit">Sair</button>
+    </form>
+  </div>
+</header>
+<main class="g-wrap g-main">
+  <div class="g-head">
+    <div>
+      <p class="eyebrow">Simulador do apoio a carros elétricos</p>
+      <h1 class="display">Contactos</h1>
+    </div>
+    <a class="btn btn-ghost" href="/gestao/contactos.csv">Descarregar Excel (CSV)</a>
+  </div>
+
+  <% if (saved === 'guardado') { %><p class="g-ok" role="status">Guardado.</p><% } %>
+  <% if (saved === 'apagado') { %><p class="g-ok" role="status">Contacto apagado.</p><% } %>
+
+  <div class="g-stats">
+    <a href="/gestao/" class="<%= !filters.resultado && !filters.estado ? 'on' : '' %>"><b class="num"><%= total %></b><span>Todos</span></a>
+    <a href="/gestao/?estado=novo" class="<%= filters.estado === 'novo' ? 'on' : '' %>"><b class="num"><%= counts.novo %></b><span>Por tratar</span></a>
+    <a href="/gestao/?resultado=ok" class="r-ok <%= filters.resultado === 'ok' ? 'on' : '' %>"><b class="num"><%= counts.ok %></b><span>Tem direito</span></a>
+    <a href="/gestao/?resultado=warn" class="r-warn <%= filters.resultado === 'warn' ? 'on' : '' %>"><b class="num"><%= counts.warn %></b><span>Perto do limite</span></a>
+    <a href="/gestao/?resultado=no" class="r-no <%= filters.resultado === 'no' ? 'on' : '' %>"><b class="num"><%= counts.no %></b><span>Acima do limite</span></a>
+  </div>
+
+  <form class="g-filters" method="get" action="/gestao/">
+    <input type="search" name="q" value="<%= filters.q %>" placeholder="Procurar nome, email ou telemóvel" aria-label="Procurar">
+    <select name="resultado" aria-label="Resultado">
+      <option value="">Todos os resultados</option>
+      <% Object.entries(RESULTADOS).forEach(([k, v]) => { %><option value="<%= k %>" <%= filters.resultado === k ? 'selected' : '' %>><%= v %></option><% }) %>
+    </select>
+    <select name="estado" aria-label="Estado">
+      <option value="">Todos os estados</option>
+      <% ESTADOS.forEach(([k, v]) => { %><option value="<%= k %>" <%= filters.estado === k ? 'selected' : '' %>><%= v %></option><% }) %>
+    </select>
+    <button class="btn btn-primary" type="submit">Filtrar</button>
+  </form>
+
+  <% if (!leads.length) { %>
+    <p class="g-empty"><%= total ? 'Nenhum contacto com estes filtros.' : 'Ainda não há contactos. Aparecem aqui quando alguém fizer a simulação em /apoio-eletrico/.' %></p>
+  <% } %>
+
+  <div class="g-list">
+  <% leads.forEach((l) => { %>
+    <article class="g-lead" id="c-<%= l.id %>">
+      <div class="g-lead-head">
+        <div>
+          <h2><%= l.nome %></h2>
+          <p class="g-muted"><%= fmtDateTime(l.criadoEm) %></p>
+        </div>
+        <span class="g-badge r-<%= l.resultado %>"><%= RESULTADOS[l.resultado] || l.resultado %></span>
+      </div>
+      <div class="g-contact">
+        <a href="tel:+351<%= l.telemovel %>"><svg><use href="#i-phone"/></svg><%= String(l.telemovel).replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3') %></a>
+        <a href="https://wa.me/351<%= l.telemovel %>" target="_blank" rel="noopener"><svg><use href="#i-wa"/></svg>WhatsApp</a>
+        <a href="mailto:<%= l.email %>"><svg><use href="#i-mail"/></svg><%= l.email %></a>
+      </div>
+      <dl class="g-facts">
+        <div><dt>Tarifa Social</dt><dd><%= LABELS.tarifaSocial[l.tarifaSocial] || '-' %></dd></div>
+        <div><dt>Em casa</dt><dd><%= l.pessoas14mais %> com 14+ anos, <%= l.criancas %> <%= l.criancas === 1 ? 'criança' : 'crianças' %></dd></div>
+        <div><dt>Rendimento</dt><dd class="num"><%= fmtNum(l.rendimentoMensal) %> €/mês</dd></div>
+        <div><dt>Limite da casa</dt><dd class="num"><%= l.limiteAnual != null ? fmtNum(Math.round(l.limiteAnual)) + ' €/ano' : '-' %></dd></div>
+        <div><dt>Carro para abate</dt><dd><%= LABELS.abate[l.abate] || '-' %></dd></div>
+        <div><dt>Pagamento</dt><dd><%= LABELS.pagamento[l.pagamento] || '-' %></dd></div>
+      </dl>
+      <form class="g-edit" method="post" action="/gestao/contactos/<%= l.id %>">
+        <label><span>Estado</span>
+          <select name="estado"><% ESTADOS.forEach(([k, v]) => { %><option value="<%= k %>" <%= l.estado === k ? 'selected' : '' %>><%= v %></option><% }) %></select>
+        </label>
+        <label class="g-note"><span>Nota</span><input name="nota" value="<%= l.nota || '' %>" maxlength="2000" placeholder="Ex.: ligar na segunda à tarde"></label>
+        <button class="btn btn-primary" type="submit">Guardar</button>
+      </form>
+      <form method="post" action="/gestao/contactos/<%= l.id %>/apagar" class="g-delete" onsubmit="return confirm('Apagar este contacto de vez? Não dá para desfazer.')">
+        <button type="submit">Apagar contacto</button>
+      </form>
+    </article>
+  <% }) %>
+  </div>
+</main>
+</body>
+</html>
