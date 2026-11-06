@@ -11,7 +11,9 @@
 .apoio [hidden] { display: none !important; }
 .apoio h1, .apoio h2, .apoio h3 { font-family: var(--f-display); line-height: 1.08; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
 .apoio p { margin: 0; }
-.apoio button, .apoio input { font: inherit; color: inherit; }
+/* os botões .btn mantêm a cor do site (texto branco no violeta) */
+.apoio button, .apoio input { font: inherit; }
+.apoio button:not(.btn), .apoio input { color: inherit; }
 .apoio :focus-visible { outline: 3px solid var(--lilac); outline-offset: 3px; border-radius: 6px; }
 .apoio-wrap { width: 100%; max-width: 640px; margin-inline: auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .apoio .stack { display: grid; gap: 20px; }
