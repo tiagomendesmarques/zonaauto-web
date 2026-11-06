@@ -37,9 +37,10 @@
         <div class="example">
           <span class="eyebrow">Exemplo</span>
           <div class="split">
-            <div class="row"><span class="k">Carro elétrico de</span><span class="v num">20.000 €</span></div>
-            <div class="row state"><span class="k">O Estado paga cerca de</span><span class="v num">13.008 €</span></div>
-            <div class="row you"><span class="k">Tu pagas</span><span class="v num">6.992 €</span></div>
+            <div class="row"><span class="k">Carro elétrico de</span><span class="v num"><%= eur(exemplo.price) %></span></div>
+            <div class="row state"><span class="k">O Estado paga cerca de</span><span class="v num"><%= eur(exemplo.ref) %></span></div>
+            <div class="row you"><span class="k">Tu pagas</span><span class="v num"><%= eur(exemplo.pays) %></span></div>
+            <div class="monthly"><span class="k">Ou, com crédito</span><span class="v num">~<%= eur(exemplo.monthly) %><small>/mês</small></span></div>
           </div>
         </div>
 
@@ -194,9 +195,14 @@
             <div class="row"><span class="k">Preço do carro</span><span class="v num" id="r-price"></span></div>
             <div class="row state"><span class="k">O Estado paga cerca de</span><span class="v num" id="r-state"></span></div>
             <div class="row you"><span class="k">Tu pagas</span><span class="v num" id="r-you"></span></div>
+            <div class="monthly">
+              <span class="k">Ou, com crédito, cerca de<small>em <%= rules.creditMonths %> meses, sem entrada</small></span>
+              <span class="v num"><span id="r-month"></span><small>/mês</small></span>
+            </div>
             <div class="parts" aria-hidden="true"><span class="s" id="bar-state"></span><span class="y" id="bar-you"></span></div>
             <div class="legend"><span><i class="l-state"></i>Estado</span><span><i class="l-you"></i>Tu</span></div>
             <p class="hint" id="r-range"></p>
+            <p class="hint credit-note">Prestação indicativa, calculada com uma TAEG de referência de <%= String(rules.creditRate * 100).replace('.', ',') %>% a <%= rules.creditMonths %> meses. Não é uma proposta de crédito: a taxa, o prazo e a prestação finais dependem da análise e aprovação da entidade financeira e podem ser diferentes.</p>
           </div>
         </div>
 

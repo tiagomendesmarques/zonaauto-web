@@ -16,6 +16,11 @@
     vat: 1.23,
     minPrice: 5000, maxPrice: 37500,
     maxPeople: 10,
+    // Prestação indicativa do crédito para o resto: 120 meses, sem entrada, com uma TAEG de referência.
+    // 11% ≈ TAEG média do crédito a usados (o Banco de Portugal fixou o máximo em 14,3% no 4.º trimestre de 2026,
+    // que é a média do trimestre anterior mais um quarto). Rever quando houver uma proposta real de um banco.
+    creditMonths: 120,
+    creditRate: 0.11,
   };
 
   const cents = (n) => Math.round(n * 100) / 100;
@@ -37,7 +42,16 @@
     const ref = support(price, RULES.pctRef, abate);
     const lo = support(price, RULES.pctMin, abate);
     const hi = support(price, RULES.pctMax, abate);
-    return { price, ref, lo, hi, pays: price - ref, paysMin: price - hi, paysMax: price - lo };
+    const pays = price - ref;
+    return { price, ref, lo, hi, pays, paysMin: price - hi, paysMax: price - lo, monthly: Math.round(monthlyPayment(pays)) };
+  }
+
+  // Prestação mensal (sistema francês, prestações iguais) para pagar `amount` em creditMonths meses.
+  function monthlyPayment(amount, months = RULES.creditMonths, annualRate = RULES.creditRate) {
+    if (!(amount > 0)) return 0;
+    const r = annualRate / 12;
+    if (!r) return amount / months;
+    return (amount * r) / (1 - (1 + r) ** -months);
   }
 
   // ok = deve ter direito; warn = perto do limite (até 10% acima); no = acima do limite.
@@ -50,5 +64,5 @@
     return { kind: 'no', annual, limit };
   }
 
-  return { RULES, weights, houseLimit, support, simulate, verdict };
+  return { RULES, weights, houseLimit, support, simulate, verdict, monthlyPayment };
 });

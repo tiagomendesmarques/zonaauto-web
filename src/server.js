@@ -200,7 +200,11 @@ app.get(['/contact-us', '/contact'], (req, res) => res.redirect(301, '/contactos
 
 app.get('/importacao', (req, res) => res.render('importacao', { page: 'importacao', missing: false, form: {} }));
 app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos', missing: false, form: {} }));
-app.get('/apoio-eletrico', (req, res) => res.render('apoio-eletrico', { page: 'apoio', consentimento: leads.CONSENTIMENTO }));
+const apoioRegras = require('../public/js/apoio-eletrico-regras');
+const eurPt = (n) => `${nf.format(Math.round(n)).replace(/\s/g, '.')} €`;
+app.get('/apoio-eletrico', (req, res) => res.render('apoio-eletrico', {
+  page: 'apoio', consentimento: leads.CONSENTIMENTO, rules: apoioRegras.RULES, exemplo: apoioRegras.simulate(20000, false), eur: eurPt,
+}));
 app.get('/politica-de-privacidade', (req, res) => res.render('privacidade', { page: '' }));
 app.get('/termos-e-condicoes-de-utilizacao', (req, res) => res.render('termos', { page: '' }));
 

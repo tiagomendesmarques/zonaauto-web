@@ -96,7 +96,8 @@ Tudo sobre a API: [docs/API_ARTIGOS.md](docs/API_ARTIGOS.md).
 `/apoio-eletrico/`: 5 perguntas, contacto obrigatório e depois o resultado (tem direito, perto do limite,
 acima do limite) com as contas do apoio. As regras anunciadas estão todas em `RULES`, no topo de
 `public/js/apoio-eletrico-regras.js`; quando sair o regulamento, muda-se só aí (as contas do servidor e
-os testes usam o mesmo ficheiro).
+os testes usam o mesmo ficheiro). A prestação indicativa do crédito (120 meses, TAEG de referência de 11%)
+está também em `RULES` (`creditMonths`, `creditRate`).
 
 Os contactos ficam no Firestore, na coleção `leads` (consola do GCP → Firestore), com as respostas,
 o resultado recalculado no servidor e o texto e a data do consentimento. Máximo de 10 contactos por hora

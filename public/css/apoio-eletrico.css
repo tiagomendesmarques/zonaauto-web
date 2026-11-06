@@ -105,6 +105,13 @@
 .apoio .row.you { border-top: 2px solid var(--line); padding-top: 12px; }
 .apoio .row.you .k { font-weight: 700; }
 .apoio .row.you .v { color: var(--accent-text); font-size: 34px; }
+.apoio .monthly { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-radius: var(--r); background: rgba(84, 43, 228, .08); }
+.apoio .monthly .k { font-weight: 700; font-size: 16px; }
+.apoio .monthly .k small { display: block; font-weight: 400; font-size: 14px; color: var(--muted); }
+.apoio .monthly .v { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: 28px; color: var(--accent-text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.apoio .monthly .v small { font-size: 16px; font-weight: 700; margin-left: 2px; }
+.apoio .example .monthly .v { font-size: 22px; }
+.apoio .credit-note { font-size: 13px; }
 .apoio .parts { display: flex; height: 14px; border-radius: 99px; overflow: hidden; background: var(--soft); }
 .apoio .parts .s { background: var(--ok); }
 .apoio .parts .y { background: var(--violet); }

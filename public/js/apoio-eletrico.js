@@ -117,6 +117,7 @@
     $('#r-price').textContent = eur(p);
     $('#r-state').textContent = eur(s.ref);
     $('#r-you').textContent = eur(s.pays);
+    $('#r-month').textContent = `~${eur(s.monthly)}`;
     $('#bar-state').style.width = `${(s.ref / p) * 100}%`;
     $('#bar-you').style.width = `${(s.pays / p) * 100}%`;
     const capNote = abate ? 'até 16.000 € porque entregas um carro para abate' : 'até 15.000 €';
@@ -151,6 +152,7 @@
     if (v.kind !== 'no') {
       const s = simulate(state.price, state.abate === 'sim');
       lines.push(`Carro de ${eur(state.price)}: apoio ~${eur(s.ref)}, fico a pagar ~${eur(s.pays)}`);
+      lines.push(`Com crédito: ~${eur(s.monthly)}/mês em ${RULES.creditMonths} meses (valor indicativo)`);
     }
     lines.push('', 'Aceito ser contactado pela Zona Auto.');
     return lines.join('\n');

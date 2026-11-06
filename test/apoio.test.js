@@ -75,3 +75,17 @@ test('contactos: o resultado é recalculado no servidor e o consentimento fica g
   assert.deepEqual(lead.consentimento, { texto: CONSENTIMENTO, dadoEm: now });
   assert.equal('website' in lead, false);
 });
+
+test('prestação indicativa do crédito (120 meses, TAEG de referência)', () => {
+  const { monthlyPayment, RULES } = require('../public/js/apoio-eletrico-regras');
+  assert.equal(RULES.creditMonths, 120);
+  // 6.992 € a 11% em 120 meses ≈ 96,32 €
+  assert.ok(Math.abs(monthlyPayment(6992) - 96.32) < 0.01);
+  // sem juros seria só dividir
+  assert.equal(monthlyPayment(12000, 120, 0), 100);
+  assert.equal(monthlyPayment(0), 0);
+  // o total pago em prestações é maior do que o valor em falta (há juros)
+  assert.ok(monthlyPayment(10000) * 120 > 10000);
+  assert.equal(simulate(20000, false).monthly, 96);
+  assert.equal(simulate(37500, false).monthly, 310);
+});
