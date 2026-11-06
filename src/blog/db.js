@@ -196,5 +196,5 @@ async function rateLimit(name, limit, windowSec) {
 
 module.exports = {
   listMeta, listPublished, listFull, getById, getBySlug, findByIdempotencyKey, createPost, updatePost, deletePost,
-  redirectMap, addRedirect, removeRedirect, audit, rateLimit, invalidate,
+  redirectMap, addRedirect, removeRedirect, audit, rateLimit, invalidate, firestore, guarded,
 };

@@ -1,0 +1,234 @@
+<%- include('partials/header', {
+  title: 'Apoio para carro elétrico 2027: simulador',
+  description: 'O Estado pode pagar até 15.000 € de um carro elétrico a famílias com pouco dinheiro. Responde a 5 perguntas e vê se tens direito e quanto ficas a pagar.',
+  extraCss: ['apoio-eletrico.css'],
+}) %>
+<div class="apoio">
+<section class="apoio-hero">
+  <div class="apoio-wrap">
+    <span class="apoio-wordmark">elétrico<b>com</b>apoio</span>
+    <span class="eyebrow"><span class="apoio-dot"></span>Novo apoio do Estado · 2027</span>
+    <h1>O Estado pode pagar até <em>15.000 €</em> do teu carro elétrico.</h1>
+    <p class="lead">Responde a 5 perguntas simples, deixa o teu contacto e vê quanto ficas a pagar. Demora 2 minutos e não pedimos documentos.</p>
+  </div>
+</section>
+
+<div class="apoio-main">
+  <div class="apoio-wrap">
+    <section class="apoio-card" id="app" aria-live="polite">
+
+      <!-- INÍCIO -->
+      <div id="s-intro" class="stack">
+        <div class="facts">
+          <div class="fact">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <div><b>Até 15.000 € de apoio</b><span>Mais 1.000 € se entregares um carro velho para abate.</span></div>
+          </div>
+          <div class="fact">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h14M6 17l1.5-6h9L18 17M7 17v2M17 17v2M8 11l1-3h6l1 3"/></svg></div>
+            <div><b>Carros novos ou usados</b><span>Elétricos com menos de 5 anos, comprados num stand.</span></div>
+          </div>
+          <div class="fact">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></div>
+            <div><b>Para famílias com pouco dinheiro</b><span>Quem tem a Tarifa Social da luz, ou ganha pouco para o tamanho da família.</span></div>
+          </div>
+        </div>
+
+        <div class="example">
+          <span class="eyebrow">Exemplo</span>
+          <div class="split">
+            <div class="row"><span class="k">Carro elétrico de</span><span class="v num">20.000 €</span></div>
+            <div class="row state"><span class="k">O Estado paga cerca de</span><span class="v num">13.008 €</span></div>
+            <div class="row you"><span class="k">Tu pagas</span><span class="v num">6.992 €</span></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="start" type="button">Ver se tenho direito
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <p class="hint">O apoio ainda não começou. As regras finais saem no início de 2027, por isso as contas são uma estimativa.</p>
+      </div>
+
+      <!-- PERGUNTAS -->
+      <div id="s-quiz" class="stack" hidden>
+        <div class="progress">
+          <div class="progress-top">
+            <button class="back" id="back" type="button">← Voltar</button>
+            <span id="step-label" class="num">Pergunta 1 de 5</span>
+          </div>
+          <div class="bar"><i id="bar"></i></div>
+        </div>
+
+        <!-- 1 tarifa social -->
+        <div class="step" data-step="1">
+          <h2 class="q">Na tua conta da luz aparece “Tarifa Social”?</h2>
+          <p class="help">É um desconto na luz para famílias com pouco dinheiro. Procura essas palavras na fatura, perto do valor a pagar.</p>
+          <div class="choices" data-key="tarifa">
+            <button class="choice" type="button" aria-pressed="false" data-val="sim"><span class="mark"></span><span>Sim, tenho</span></button>
+            <button class="choice" type="button" aria-pressed="false" data-val="nao"><span class="mark"></span><span>Não tenho</span></button>
+            <button class="choice" type="button" aria-pressed="false" data-val="naosei"><span class="mark"></span><span>Não sei</span></button>
+          </div>
+        </div>
+
+        <!-- 2 casa -->
+        <div class="step" data-step="2" hidden>
+          <h2 class="q">Quem vive contigo?</h2>
+          <div class="tip">
+            <b>Conta só a família que vive na tua casa e ajuda nas contas.</b>
+            <ul>
+              <li>Conta contigo.</li>
+              <li>Conta marido, mulher, companheiro ou companheira, filhos, pais ou avós que vivem contigo.</li>
+              <li>Não contes quem só aluga um quarto, nem colegas de casa.</li>
+            </ul>
+          </div>
+          <div class="stepper">
+            <div class="lbl">Pessoas com 14 anos ou mais<small>Contigo incluído</small></div>
+            <div class="ctl">
+              <button class="round" type="button" id="adults-minus" aria-label="Menos uma pessoa com 14 anos ou mais">−</button>
+              <output class="count num" id="adults">1</output>
+              <button class="round" type="button" id="adults-plus" aria-label="Mais uma pessoa com 14 anos ou mais">+</button>
+            </div>
+          </div>
+          <div class="stepper">
+            <div class="lbl">Crianças com menos de 14 anos</div>
+            <div class="ctl">
+              <button class="round" type="button" id="kids-minus" aria-label="Menos uma criança">−</button>
+              <output class="count num" id="kids">0</output>
+              <button class="round" type="button" id="kids-plus" aria-label="Mais uma criança">+</button>
+            </div>
+          </div>
+          <p class="summary-line" id="house-summary">Vives sozinho ou sozinha.</p>
+          <button class="btn btn-primary btn-block next" type="button">Continuar</button>
+        </div>
+
+        <!-- 3 dinheiro -->
+        <div class="step" data-step="3" hidden>
+          <h2 class="q">Quanto dinheiro entra na tua casa por mês?</h2>
+          <p class="help">Soma o que <strong>todos</strong> recebem: ordenados, reformas, pensões, subsídios e abonos. Usa o valor <strong>líquido</strong>, ou seja, o que cai na conta depois dos descontos (não o bruto). Um valor aproximado chega.</p>
+          <div class="money">
+            <input id="income" size="1" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="Dinheiro que entra em casa por mês, em euros">
+            <span>€</span>
+          </div>
+          <p class="hint">Por exemplo, se te caem 870 € na conta e ao teu marido 600 €, escreve 1470.</p>
+          <p class="err" id="income-err" hidden>Escreve um valor em euros, só com números.</p>
+          <button class="btn btn-primary btn-block" type="button" id="income-next">Continuar</button>
+        </div>
+
+        <!-- 4 abate -->
+        <div class="step" data-step="4" hidden>
+          <h2 class="q">Tens um carro a gasolina ou gasóleo para entregar para abate?</h2>
+          <p class="help">Abate quer dizer entregar o carro velho para ser destruído. Não é obrigatório, mas o apoio sobe <strong>1.000 €</strong>.</p>
+          <div class="choices" data-key="abate">
+            <button class="choice" type="button" aria-pressed="false" data-val="sim"><span class="mark"></span><span>Sim, tenho</span></button>
+            <button class="choice" type="button" aria-pressed="false" data-val="nao"><span class="mark"></span><span>Não tenho</span></button>
+          </div>
+        </div>
+
+        <!-- 5 pagamento -->
+        <div class="step" data-step="5" hidden>
+          <h2 class="q">A parte que ficar por pagar, como gostavas de pagar?</h2>
+          <p class="help">O apoio não paga o carro todo. Fica sempre uma parte para ti.</p>
+          <div class="choices" data-key="pagamento">
+            <button class="choice" type="button" aria-pressed="false" data-val="prestacoes"><span class="mark"></span><span>Às prestações, todos os meses<small>Ajudamos com o financiamento</small></span></button>
+            <button class="choice" type="button" aria-pressed="false" data-val="pronto"><span class="mark"></span><span>Tudo de uma vez</span></button>
+            <button class="choice" type="button" aria-pressed="false" data-val="naosei"><span class="mark"></span><span>Ainda não sei</span></button>
+          </div>
+        </div>
+
+        <!-- 6 contacto (obrigatório antes do resultado) -->
+        <form class="step" data-step="6" id="lead" novalidate hidden>
+          <h2 class="q">Último passo: para quem é esta simulação?</h2>
+          <p class="help">Deixa os teus dados para veres o resultado. Assim podemos ajudar-te a escolher o carro e avisar-te quando as candidaturas abrirem.</p>
+          <div class="field">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" autocomplete="name" placeholder="O teu nome" maxlength="120">
+          </div>
+          <div class="field">
+            <label for="tel">Telemóvel</label>
+            <input type="tel" id="tel" inputmode="tel" autocomplete="tel" placeholder="9xx xxx xxx" maxlength="20">
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" autocomplete="email" placeholder="nome@exemplo.pt" maxlength="200">
+          </div>
+          <div class="hp" aria-hidden="true">
+            <label for="website">Não preencher</label>
+            <input type="text" id="website" tabindex="-1" autocomplete="off">
+          </div>
+          <label class="consent" for="ok">
+            <input type="checkbox" id="ok">
+            <span><%= consentimento %> Ver a <a href="/politica-de-privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</span>
+          </label>
+          <p class="err" id="lead-err" role="alert" hidden></p>
+          <button class="btn btn-primary btn-block" type="submit" id="lead-submit"><span id="lead-submit-text">Ver o meu resultado</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- RESULTADO -->
+      <div id="s-result" class="stack" hidden>
+        <div class="verdict" id="verdict">
+          <span class="badge" id="verdict-badge"></span>
+          <h2 id="verdict-title"></h2>
+          <p id="verdict-text"></p>
+        </div>
+
+        <div id="calc" class="stack">
+          <div class="price-pick">
+            <div class="price-head">
+              <label for="price">Preço do carro que procuras</label>
+              <span class="big num" id="price-out">20.000 €</span>
+            </div>
+            <input type="range" id="price" min="5000" max="37500" step="500" value="20000" aria-describedby="price-hint">
+            <div class="chips" id="price-chips">
+              <button class="chip" type="button" data-p="15000" aria-pressed="false">15.000 €</button>
+              <button class="chip" type="button" data-p="20000" aria-pressed="true">20.000 €</button>
+              <button class="chip" type="button" data-p="25000" aria-pressed="false">25.000 €</button>
+              <button class="chip" type="button" data-p="30000" aria-pressed="false">30.000 €</button>
+            </div>
+            <p class="hint" id="price-hint">Preço final no stand, já com IVA. O carro pode custar no máximo 37.500 €, com IVA incluído.</p>
+          </div>
+
+          <div class="split" aria-label="Contas">
+            <div class="row"><span class="k">Preço do carro</span><span class="v num" id="r-price"></span></div>
+            <div class="row state"><span class="k">O Estado paga cerca de</span><span class="v num" id="r-state"></span></div>
+            <div class="row you"><span class="k">Tu pagas</span><span class="v num" id="r-you"></span></div>
+            <div class="parts" aria-hidden="true"><span class="s" id="bar-state"></span><span class="y" id="bar-you"></span></div>
+            <div class="legend"><span><i class="l-state"></i>Estado</span><span><i class="l-you"></i>Tu</span></div>
+            <p class="hint" id="r-range"></p>
+          </div>
+        </div>
+
+        <hr>
+
+        <div id="talk" class="stack-sm">
+          <div class="stack-xs">
+            <h2 class="q" id="lead-title">Queres ajuda a escolher o carro?</h2>
+            <p class="help" id="lead-text">Manda-nos a tua simulação pelo WhatsApp. Já vai escrita, só tens de carregar em enviar.</p>
+          </div>
+          <a class="btn btn-wa btn-block" id="wa" data-wa="simulador_apoio_eletrico" href="/whatsapp/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.4.8 3.2.6a2.8 2.8 0 0 0 1.8-1.3 2.3 2.3 0 0 0 .2-1.3c-.1-.1-.3-.2-.5-.3Z"/></svg>
+            Falar pelo WhatsApp
+          </a>
+          <p class="hint" id="wa-hint"></p>
+          <div class="contact-alt">
+            <span>Preferes email? Escreve para</span>
+            <span><span class="copy" id="mail"><%= stand.email %></span> <button class="copy-btn" type="button" id="copy-mail">Copiar</button></span>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost btn-block" type="button" id="restart">Fazer a simulação de novo</button>
+
+        <div class="notice">
+          <p><b>Importante:</b> isto é uma estimativa, não é uma aprovação. O apoio foi anunciado pelo Governo para o início de 2027, mas ainda falta a aprovação final e as regras oficiais. Há apoio para cerca de 5.500 carros, e quem tem Tarifa Social passa à frente.</p>
+          <p>O carro tem de ser comprado num stand e não pode ser vendido durante 3 anos.</p>
+        </div>
+      </div>
+    </section>
+
+    <p class="apoio-note">Contas feitas com o que o Ministério do Ambiente e Energia anunciou a 3 de novembro de 2026: carros até 37.500 € com IVA incluído; apoio de 70% a 90% do preço sem IVA, até 15.000 € (16.000 € com abate). Limite de rendimento líquido de 11.572 € por ano por adulto equivalente.</p>
+  </div>
+</div>
+</div>
+<%- include('partials/footer', { extraJs: ['apoio-eletrico-regras.js', 'apoio-eletrico.js'], waText: 'Olá! Queria saber mais sobre o apoio para comprar carro elétrico.' }) %>

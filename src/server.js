@@ -6,6 +6,7 @@ const store = require('./store');
 const photos = require('./photos');
 const blog = require('./blog/routes');
 const media = require('./blog/media');
+const leads = require('./leads');
 
 const app = express();
 app.set('view engine', 'ejs');
@@ -18,6 +19,8 @@ app.get('/foto/:id/:size.jpg', photos.handler);
 app.get(/^\/media\/(.+)$/, media.handler);
 // API de artigos: tem a sua própria leitura do corpo (JSON até 1 MB)
 app.use('/api/v1/artigos', blog.apiRouter);
+// Contactos do simulador do apoio a carros elétricos (JSON)
+app.use('/api/leads', leads.router);
 app.use(express.urlencoded({ extended: false, limit: '20kb' }));
 // Endereço da página (para o canonical) e "Blog" no menu quando há artigos
 app.use((req, res, next) => {
@@ -194,6 +197,7 @@ app.get(['/contact-us', '/contact'], (req, res) => res.redirect(301, '/contactos
 
 app.get('/importacao', (req, res) => res.render('importacao', { page: 'importacao', missing: false, form: {} }));
 app.get('/contactos', (req, res) => res.render('contactos', { page: 'contactos', missing: false, form: {} }));
+app.get('/apoio-eletrico', (req, res) => res.render('apoio-eletrico', { page: '', consentimento: leads.CONSENTIMENTO }));
 app.get('/politica-de-privacidade', (req, res) => res.render('privacidade', { page: '' }));
 app.get('/termos-e-condicoes-de-utilizacao', (req, res) => res.render('termos', { page: '' }));
 
@@ -236,7 +240,7 @@ app.get('/sitemap.xml', wrap(async (req, res) => {
   const cars = await store.getCars();
   const posts = await blog.sitemapEntries();
   const urls = [
-    ...['/', '/stock/', '/importacao/', '/contactos/', ...cars.map((c) => `/stock/${c.slug}/`)].map((path) => ({ path })),
+    ...['/', '/stock/', '/importacao/', '/apoio-eletrico/', '/contactos/', ...cars.map((c) => `/stock/${c.slug}/`)].map((path) => ({ path })),
     ...(posts.length ? [{ path: '/blog/', lastmod: posts.reduce((a, p) => (p.lastmod > a ? p.lastmod : a), posts[0].lastmod) }, ...posts] : []),
   ];
   res.type('application/xml').send(

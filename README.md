@@ -32,6 +32,7 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 | `/stock/` | Todas as viaturas, com filtros (marca, modelo, combustível, caixa, segmento, preço, ano, km) e ordenação |
 | `/stock/<marca-modelo-ano-ref>/` | Galeria, preço, características agrupadas, equipamento, descrição, WhatsApp e telefone |
 | `/importacao/`, `/contactos/` | Formulários que abrem o WhatsApp do stand com o pedido já escrito |
+| `/apoio-eletrico/` | Simulador do apoio de 2027 para famílias carenciadas comprarem carro elétrico (o contacto fica gravado antes de se ver o resultado) |
 | `/politica-de-privacidade/`, `/termos-e-condicoes-de-utilizacao/` | Textos legais do site anterior |
 | `/foto/<id>/<tamanho>.jpg` | Fotos do Standvirtual servidas pelo próprio site, com cache |
 | `/sitemap.xml`, `/robots.txt` | SEO (cada viatura tem também dados estruturados schema.org) |
@@ -41,6 +42,7 @@ Standvirtual ──(a cada 30 min)──▶ Cloud Run (Node.js) ──▶ zonaau
 | `/blog/{slug}/` | Artigo, com perguntas frequentes, fontes e dados estruturados para o Google |
 | `/feed/` | RSS dos últimos 20 artigos |
 | `/api/v1/artigos/` | API para criar e gerir artigos (ver [docs/API_ARTIGOS.md](docs/API_ARTIGOS.md)) |
+| `/api/leads` | Grava os contactos do simulador (Firestore, coleção `leads`) |
 
 Os endereços antigos do WordPress (`/listings/...`) redirecionam para a viatura correspondente ou para o stock.
 
@@ -89,6 +91,17 @@ as imagens do Pexels são convertidas para WebP e guardadas no bucket, as do Uns
 Não há back-office. Instalar uma vez: `PROJECT_ID=o-meu-projeto ./deploy/blog-setup.sh`.
 Tudo sobre a API: [docs/API_ARTIGOS.md](docs/API_ARTIGOS.md).
 
+## Simulador do apoio a carros elétricos
+
+`/apoio-eletrico/`: 5 perguntas, contacto obrigatório e depois o resultado (tem direito, perto do limite,
+acima do limite) com as contas do apoio. As regras anunciadas estão todas em `RULES`, no topo de
+`public/js/apoio-eletrico-regras.js`; quando sair o regulamento, muda-se só aí (as contas do servidor e
+os testes usam o mesmo ficheiro).
+
+Os contactos ficam no Firestore, na coleção `leads` (consola do GCP → Firestore), com as respostas,
+o resultado recalculado no servidor e o texto e a data do consentimento. Máximo de 10 contactos por hora
+por IP e 500 no total; um campo escondido apanha bots.
+
 ## Medição (Google Tag Manager / Meta)
 
 O site carrega o GTM `GTM-NNQ8RX77` (variável `GTM_ID`) e envia para o `dataLayer`:
@@ -97,9 +110,10 @@ O site carrega o GTM `GTM-NNQ8RX77` (variável `GTM_ID`) e envia para o `dataLay
 |---|---|---|
 | `whatsapp_click` | Qualquer botão de WhatsApp, incluindo os formulários | `contacto_local`, e na página de uma viatura `viatura`, `valor`, `moeda` |
 | `telefone_click` | Clique num número de telefone | os mesmos |
+| `lead_simulador` | Contacto gravado no simulador do apoio a carros elétricos | `contacto_local` (`simulador_apoio_eletrico`), `resultado` (`ok`, `warn`, `no`) |
 
 `contacto_local`: `botao_flutuante`, `rodape`, `viatura_informacoes`, `viatura_agendar_visita`,
-`viatura_marcar_visita`, `formulario_contactos`, `formulario_importacao`, `stock_vazio`, `cabecalho`, `pagina`.
+`viatura_marcar_visita`, `formulario_contactos`, `formulario_importacao`, `stock_vazio`, `simulador_apoio_eletrico`, `cabecalho`, `pagina`.
 
 ## Personalizar
 
