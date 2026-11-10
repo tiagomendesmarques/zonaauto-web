@@ -49,6 +49,9 @@
 .apoio .back { background: none; border: 0; padding: 8px 0; color: var(--accent-text); font-weight: 600; cursor: pointer; font-size: 16px; }
 
 .apoio .step { display: grid; gap: 18px; }
+/* o site usa .step na página inicial ("como funciona") com número "01" e linha por cima; aqui não */
+.apoio .step { padding: 0; border: 0; }
+.apoio .step::before { content: none; display: none; }
 .apoio .q { font-size: clamp(25px, 5.6vw, 31px); font-weight: 800; font-stretch: 112%; }
 .apoio .help { color: var(--muted); font-size: 17px; }
 .apoio .help strong { color: var(--text); }
